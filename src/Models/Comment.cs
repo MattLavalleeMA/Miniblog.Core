@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Miniblog.Core.Models
@@ -7,7 +8,7 @@ namespace Miniblog.Core.Models
     public class Comment
     {
         [Required]
-        public string ID { get; set; } = Guid.NewGuid().ToString();
+        public string Id { get; set; } = Guid.NewGuid().ToString();
 
         [Required]
         public string Author { get; set; }
@@ -25,16 +26,16 @@ namespace Miniblog.Core.Models
 
         public string GetGravatar()
         {
-            using (var md5 = System.Security.Cryptography.MD5.Create())
+            using (MD5 md5 = MD5.Create())
             {
                 byte[] inputBytes = Encoding.UTF8.GetBytes(Email.Trim().ToLowerInvariant());
                 byte[] hashBytes = md5.ComputeHash(inputBytes);
 
                 // Convert the byte array to hexadecimal string
                 var sb = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
+                foreach (byte b in hashBytes)
                 {
-                    sb.Append(hashBytes[i].ToString("X2"));
+                    sb.Append(b.ToString("X2"));
                 }
 
                 return $"https://www.gravatar.com/avatar/{sb.ToString().ToLowerInvariant()}?s=60&d=blank";

@@ -1,35 +1,35 @@
 {
-  "author": "Mads Kristensen",
-  "classifications": [ "Web", "MVC" ],
-  "name": "Miniblog.Core",
-  "defaultName": "WebApplication1",
-  "identity": "madsk.miniblog.core",
-  "groupIdentity": "madsk.miniblog.core",
-  "shortName": "miniblog",
-  "sources": [
-    {
-      "exclude": [ "Properties/**/*", "**/[Bb]in/**", "**/[Oo]bj/**", ".template.config/**/*", "**/*.filelist", "**/*.user", "**/*.lock.json" ]
-    }
-  ],
-  "tags": {
-    "language": "C#",
-    "type": "project"
-  },
-  "sourceName": "Miniblog.Core",
-  "preferNameDirectory": true,
-  "primaryOutputs": [ { "path": "Miniblog.Core.csproj" } ],
-  "symbols": {
-    "Framework": {
-      "type": "parameter",
-      "description": "The target framework for the project.",
-      "datatype": "choice",
-      "choices": [
+    "author": "Matt Lavallee",
+    "classifications": [ "Web", "MVC" ],
+    "name": "Miniblog.Core",
+    "defaultName": "WebApplication1",
+    "identity": "mattldotcom.miniblog.core",
+    "groupIdentity": "mattldotcom.miniblog.core",
+    "shortName": "miniblog",
+    "sources": [
         {
-          "choice": "netcoreapp2.0",
-          "description": "Target netcoreapp2.0"
+            "exclude": [ "Properties/**/*", "**/[Bb]in/**", "**/[Oo]bj/**", ".template.config/**/*", "**/*.filelist", "**/*.user", "**/*.lock.json" ]
         }
-      ],
-      "defaultValue": "netcoreapp2.0"
+    ],
+    "tags": {
+        "language": "C#",
+        "type": "project"
+    },
+    "sourceName": "Miniblog.Core",
+    "preferNameDirectory": true,
+    "primaryOutputs": [ { "path": "Miniblog.Core.csproj" } ],
+    "symbols": {
+        "Framework": {
+            "type": "parameter",
+            "description": "The target framework for the project.",
+            "datatype": "choice",
+            "choices": [
+                {
+                    "choice": "netcoreapp2.2",
+                    "description": "Target netcoreapp2.2"
+                }
+            ],
+            "defaultValue": "netcoreapp2.2"
+        }
     }
-  }
 }

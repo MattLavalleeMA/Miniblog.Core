@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Copyright (c) 2019 All rights reserved.
+// Code should follow the .NET Standard Guidelines:
+// https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/
+
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +13,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.SyndicationFeed;
 using Microsoft.SyndicationFeed.Atom;
 using Microsoft.SyndicationFeed.Rss;
+using Miniblog.Core.Configuration;
+using Miniblog.Core.Models;
 using Miniblog.Core.Services;
 using WebEssentials.AspNetCore.Pwa;
 
@@ -16,8 +23,8 @@ namespace Miniblog.Core.Controllers
     public class RobotsController : Controller
     {
         private readonly IBlogService _blog;
-        private readonly IOptionsSnapshot<BlogSettings> _settings;
         private readonly WebManifest _manifest;
+        private readonly IOptionsSnapshot<BlogSettings> _settings;
 
         public RobotsController(IBlogService blog, IOptionsSnapshot<BlogSettings> settings, WebManifest manifest)
         {
@@ -46,20 +53,22 @@ namespace Miniblog.Core.Controllers
 
             Response.ContentType = "application/xml";
 
-            using (var xml = XmlWriter.Create(Response.Body, new XmlWriterSettings { Indent = true }))
+            using (XmlWriter xml = XmlWriter.Create(Response.Body, new XmlWriterSettings {Indent = true}))
             {
                 xml.WriteStartDocument();
                 xml.WriteStartElement("urlset", "http://www.sitemaps.org/schemas/sitemap/0.9");
 
-                var posts = await _blog.GetPosts(int.MaxValue);
+                IEnumerable<Post> posts = await _blog.GetPosts(int.MaxValue);
 
-                foreach (Models.Post post in posts)
+                foreach (Post post in posts)
                 {
-                    var lastMod = new[] { post.PubDate, post.LastModified };
+                    DateTime[] lastMod = {post.PubDate, post.DateModified};
 
                     xml.WriteStartElement("url");
                     xml.WriteElementString("loc", host + post.GetLink());
-                    xml.WriteElementString("lastmod", lastMod.Max().ToString("yyyy-MM-ddThh:mmzzz"));
+                    xml.WriteElementString("lastmod",
+                        lastMod.Max()
+                            .ToString("yyyy-MM-ddThh:mmzzz"));
                     xml.WriteEndElement();
                 }
 
@@ -75,7 +84,7 @@ namespace Miniblog.Core.Controllers
             Response.ContentType = "application/xml";
             Response.Headers["cache-control"] = "no-cache, no-store, must-revalidate";
 
-            using (var xml = XmlWriter.Create(Response.Body, new XmlWriterSettings { Indent = true }))
+            using (XmlWriter xml = XmlWriter.Create(Response.Body, new XmlWriterSettings {Indent = true}))
             {
                 xml.WriteStartDocument();
                 xml.WriteStartElement("rsd");
@@ -92,7 +101,7 @@ namespace Miniblog.Core.Controllers
                 xml.WriteAttributeString("name", "MetaWeblog");
                 xml.WriteAttributeString("preferred", "true");
                 xml.WriteAttributeString("apilink", host + "/metaweblog");
-                xml.WriteAttributeString("blogid", "1");
+                xml.WriteAttributeString("blogId", "1");
 
                 xml.WriteEndElement(); // api
                 xml.WriteEndElement(); // apis
@@ -107,12 +116,19 @@ namespace Miniblog.Core.Controllers
             Response.ContentType = "application/xml";
             string host = Request.Scheme + "://" + Request.Host;
 
-            using (XmlWriter xmlWriter = XmlWriter.Create(Response.Body, new XmlWriterSettings() { Async = true, Indent = true, Encoding = new UTF8Encoding(false) }))
+            using (XmlWriter xmlWriter = XmlWriter.Create(Response.Body,
+                new XmlWriterSettings
+                {
+                    Async = true,
+                    Indent = true,
+                    Encoding = new UTF8Encoding(false)
+                }))
             {
-                var posts = await _blog.GetPosts(10);
-                var writer = await GetWriter(type, xmlWriter, posts.Max(p => p.PubDate));
+                IEnumerable<Post> posts = await _blog.GetPosts(10);
+                Post[] latestPosts = posts as Post[] ?? posts.ToArray();
+                ISyndicationFeedWriter writer = await GetWriter(type, xmlWriter, latestPosts.Max(p => p.PubDate));
 
-                foreach (Models.Post post in posts)
+                foreach (Post post in latestPosts)
                 {
                     var item = new AtomEntry
                     {
@@ -120,8 +136,8 @@ namespace Miniblog.Core.Controllers
                         Description = post.Content,
                         Id = host + post.GetLink(),
                         Published = post.PubDate,
-                        LastUpdated = post.LastModified,
-                        ContentType = "html",
+                        LastUpdated = post.DateModified,
+                        ContentType = "html"
                     };
 
                     foreach (string category in post.Categories)
@@ -129,7 +145,7 @@ namespace Miniblog.Core.Controllers
                         item.AddCategory(new SyndicationCategory(category));
                     }
 
-                    item.AddContributor(new SyndicationPerson("test@example.com", _settings.Value.Owner));
+                    item.AddContributor(new SyndicationPerson("matt@mattL.com", _settings.Value.Owner));
                     item.AddLink(new SyndicationLink(new Uri(item.Id)));
 
                     await writer.Write(item);

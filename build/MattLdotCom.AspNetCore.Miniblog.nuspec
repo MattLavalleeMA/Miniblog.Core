@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata>
-    <id>MadsKristensen.AspNetCore.Miniblog</id>
+    <id>MattLdotCom.AspNetCore.Miniblog</id>
     <title>Miniblog.Core</title>
     <summary>A high-performance blog web site using ASP.NET Core MVC and the latest in client-side technologies.</summary>
-    <version>1.0.3</version>
+    <version>1.1.0</version>
     <description>A high-performance blog web site using ASP.NET Core MVC and the latest in client-side technologies.</description>
-    <authors>Mads Kristensen</authors>
-    <projectUrl>https://github.com/madskristensen/Miniblog.Core</projectUrl>
+    <authors>Matt Lavallee</authors>
+    <projectUrl>https://github.com/MattLavalleeMA/Miniblog.Core</projectUrl>
     <tags>asp.net core .net template</tags>
-    <iconUrl>https://raw.githubusercontent.com/madskristensen/Miniblog.Core/master/src/.template.config/icon.png</iconUrl>
+    <iconUrl>https://raw.githubusercontent.com/mattlavalleema/Miniblog.Core/master/src/.template.config/icon.png</iconUrl>
     <packageTypes>
       <packageType name="Template" />
     </packageTypes>
