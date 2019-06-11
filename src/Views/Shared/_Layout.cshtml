@@ -1,4 +1,5 @@
-﻿@inject IOptionsSnapshot<BlogSettings> settings
+﻿@using Miniblog.Core.Configuration
+@inject IOptionsSnapshot<BlogSettings> settings
 @inject WebManifest manifest
 @{
     var host = Context.Request.Scheme + "://" + Context.Request.Host;

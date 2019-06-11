@@ -13,7 +13,7 @@
 
     <form method="post" id="edit" class="container" asp-controller="Blog" asp-action="UpdatePost">
         <div asp-validation-summary="All"></div>
-        <input type="hidden" asp-for="@Model.ID" />
+        <input type="hidden" asp-for="@Model.Id" />
 
         <label asp-for="@Model.Title" class="label">Title</label>
         <input asp-for="@Model.Title" required placeholder="Title of blog post" aria-describedby="desc_title" />
@@ -52,7 +52,7 @@
 
         @if (!isNew)
         {
-            <input type="submit" value="Delete..." class="delete" title="Delete the post..." asp-action="DeletePost" asp-route-id="@Model.ID" />
+            <input type="submit" value="Delete..." class="delete" title="Delete the post..." asp-action="DeletePost" asp-route-id="@Model.Id" />
         }
     </form>
 

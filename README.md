@@ -1,6 +1,13 @@
-# Blog engine for ASP.NET Core 2.0
+# Blog engine for ASP.NET Core 2.2
 
-A full-featured yet simple blog engine built on ASP.NET Core 2.0.
+This is my fork of Mads Kristensen's [Miniblog.Core](https://github.com/madskristensen/Miniblog.Core) built on ASP.NET Core 2.2.  
+It is mostly a playground project and [dogfooding](https://www.centercode.com/blog/2018/11/promote-customer-zero-with-dogfooding) 
+exercise with various Azure & web development features that are approachable 
+in a simple project that any developer (including me) can understand.
+
+[![Build status](https://mattlavallee.visualstudio.com/Miniblog.Core/_apis/build/status/Miniblog.Core-ASP.NET%20Core-CI?branchName=master)](https://mattlavallee.visualstudio.com/Miniblog.Core/_build/latest?definitionId=-1)
+
+**Mads' NuGet package:**
 
 [![Build status](https://ci.appveyor.com/api/projects/status/lwjrlpvmhg50wwbs?svg=true)](https://ci.appveyor.com/project/madskristensen/miniblog-core)
 [![NuGet](https://img.shields.io/nuget/v/MadsKristensen.AspNetCore.Miniblog.svg)](https://nuget.org/packages/MadsKristensen.AspNetCore.Miniblog/)
@@ -8,7 +15,7 @@ A full-featured yet simple blog engine built on ASP.NET Core 2.0.
 [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
 
 **Live demo**: <https://miniblogcore.azurewebsites.net/>  
-Username: *demo*  
+userId: *demo*  
 Password: *demo*
 
 ![Editor](art/editor.png)
@@ -16,7 +23,7 @@ Password: *demo*
 ### Custom themes
 In search for custom designed themes for MiniBlog.Core? [Click here](https://francis.bio/miniblog-themes/).
 
-## Features
+## Original Features
 - Windows/Open Live Writer support
 - RSS and ATOM feeds
 - User comments
@@ -29,6 +36,25 @@ In search for custom designed themes for MiniBlog.Core? [Click here](https://fra
 - Works offline with use of [Service Worker](https://developers.google.com/web/fundamentals/primers/service-workers/)
 - Follows best practices for web applications
   - [See DareBoost report](https://www.dareboost.com/en/report/59e928f10cf224d151dfbe2d)
+
+## My Additions & Changes
+- Supports multiple users
+- Uses SHA256 for password hashing
+- Uses [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/) for posts & images instead of the filesystem
+- Adds [Azure Cache for Redis](https://azure.microsoft.com/en-us/services/cache/) for acceleration
+- Adds [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) for storing secrets
+- Adds [Health Checks](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-2.2) middleware
+- Adds HSTS to force SSL/TLS
+
+## My ToDo List
+- Simplify porting UserSecrets to Key Vault
+- Refactor IBlogService to use async methods for [Metaweblog](https://github.com/shawnwildermuth/MetaWeblog)
+- Port to [RoosterJs](https://github.com/Microsoft/roosterjs) editor
+- Add [WebPush](https://github.com/web-push-libs/web-push-csharp) notifications
+- Incorporate social notifications for new posts
+- Add WordCloud generation
+- Add a New Blog Wizard to set up all the Azure bits
+- Replicate Mads' NuGet packaging / deployment
 
 ## Technical features
 - High performance. Gets 100/100 points on Google PageSpeed Insights 
@@ -66,23 +92,8 @@ You can embed any youtube video by using the following syntax in the source of a
 *ScXvuavqhzo* is the ID of the YouTube video which can be found in any YouTube link looking this *youtube.com/watch?v=**ScXvuavqhzo***
 
 ## How to use
-On the command line, install the template.
-
-```cmd
-dotnet new --install MadsKristensen.AspNetCore.Miniblog
-```
-
-Then create it into any folder.
-
-```cmd
-dotnet new miniblog
-```
-
-Then run it or open it in Visual Studio or your favorite code editor.
-
-```cmd
-dotnet run
-```
+Clone it.
 
 ## Credits
-SVG icons by <https://simpleicons.org/>
+- Original [Miniblog.Core](https://github.com/madskristensen/Miniblog.Core) by Mads Kristensen
+- SVG icons by <https://simpleicons.org/>

@@ -1,19 +1,22 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.IO;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using Miniblog.Core.Configuration;
 using Miniblog.Core.Services;
+using Miniblog.Core.Services.Azure;
 using WebEssentials.AspNetCore.OutputCaching;
+using WebEssentials.AspNetCore.Pwa;
 using WebMarkupMin.AspNetCore2;
 using WebMarkupMin.Core;
 using WilderMinds.MetaWeblog;
-
 using IWmmLogger = WebMarkupMin.Core.Loggers.ILogger;
 using MetaWeblogService = Miniblog.Core.Services.MetaWeblogService;
 using WmmNullLogger = WebMarkupMin.Core.Loggers.NullLogger;
@@ -27,48 +30,69 @@ namespace Miniblog.Core
             Configuration = configuration;
         }
 
+        public IConfiguration Configuration { get; }
+
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().Run();
+            CreateWebHostBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddConsole();
+                    logging.AddDebug();
+                })
+                .Build()
+                .Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        {
+            return WebHost.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    config = ConfigBuilder.BuildAppConfiguration(hostingContext, config, args);
+                })
                 .UseStartup<Startup>()
                 .UseKestrel(a => a.AddServerHeader = false);
-
-        public IConfiguration Configuration { get; }
+        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.AddSingleton<IUserServices, BlogUserServices>();
-            services.AddSingleton<IBlogService, FileBlogService>();
             services.Configure<BlogSettings>(Configuration.GetSection("blog"));
+            services.Configure<BlobStorageSettings>(Configuration.GetSection("blobStorage"));
+            services.Configure<RedisSettings>(Configuration.GetSection("redis"));
+            services.Configure<UserSettings>(Configuration.GetSection("user"));
+
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = Configuration.GetSection("redis")["ConnectionString"];
+                options.InstanceName = Configuration.GetSection("redis")["InstanceName"];
+            });
+
+            services.AddSingleton<ICacheService, CacheService>();
+            services.AddSingleton<IUserServices, BlogUserServices>();
+            services.AddSingleton<IBlobStorageService, BlobStorageService>();
+            services.AddSingleton<IBlogService, BlobBlogService>();
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddMetaWeblog<MetaWeblogService>();
 
             // Progressive Web Apps https://github.com/madskristensen/WebEssentials.AspNetCore.ServiceWorker
-            services.AddProgressiveWebApp(new WebEssentials.AspNetCore.Pwa.PwaOptions
-            {
-                OfflineRoute = "/shared/offline/"
-            });
+            services.AddProgressiveWebApp(new PwaOptions {OfflineRoute = "/Shared/Offline/"});
 
             // Output caching (https://github.com/madskristensen/WebEssentials.AspNetCore.OutputCaching)
             services.AddOutputCaching(options =>
-            {
-                options.Profiles["default"] = new OutputCacheProfile
                 {
-                    Duration = 3600
-                };
-            });
+                    options.Profiles["default"] = new OutputCacheProfile {Duration = 3600};
+                }
+            );
 
             // Cookie authentication.
-            services
-                .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
                     options.LoginPath = "/login/";
@@ -76,8 +100,7 @@ namespace Miniblog.Core
                 });
 
             // HTML minification (https://github.com/Taritsyn/WebMarkupMin)
-            services
-                .AddWebMarkupMin(options =>
+            services.AddWebMarkupMin(options =>
                 {
                     options.AllowMinificationInDevelopmentEnvironment = true;
                     options.DisablePoweredByHttpHeaders = true;
@@ -94,11 +117,15 @@ namespace Miniblog.Core
             {
                 pipeline.MinifyJsFiles();
                 pipeline.CompileScssFiles()
-                        .InlineImages(1);
+                    .InlineImages(500);
             });
+
+            services.AddHealthChecks()
+                .AddAzureBlobStorage(Configuration.GetSection("blobStorage")["ConnectionString"], "Blob Storage")
+                .AddRedis(Configuration.GetSection("redis")["ConnectionString"], "Redis");
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        // This method gets called by the runtime. Use this method to configure middleware for the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -109,7 +136,6 @@ namespace Miniblog.Core
             else
             {
                 app.UseExceptionHandler("/Shared/Error");
-                app.UseHsts();
             }
 
             app.Use((context, next) =>
@@ -126,6 +152,7 @@ namespace Miniblog.Core
             if (Configuration.GetValue<bool>("forcessl"))
             {
                 app.UseHttpsRedirection();
+                app.UseHsts();
             }
 
             app.UseMetaWeblog("/metaweblog");
@@ -134,12 +161,9 @@ namespace Miniblog.Core
             app.UseOutputCaching();
             app.UseWebMarkupMin();
 
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Blog}/{action=Index}/{id?}");
-            });
+            app.UseHealthChecks("/health");
+
+            app.UseMvc(routes => { routes.MapRoute("default", "{controller=Blog}/{action=Index}/{id?}"); });
         }
     }
 }

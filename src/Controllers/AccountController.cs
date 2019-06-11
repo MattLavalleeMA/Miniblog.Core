@@ -35,19 +35,19 @@ namespace Miniblog.Core.Controllers
         {
             ViewData["ReturnUrl"] = returnUrl;
 
-            if (ModelState.IsValid && _userServices.ValidateUser(model.UserName, model.Password))
+            if (ModelState.IsValid && _userServices.ValidateUser(model.userId, model.Password))
             {
                 var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
-                identity.AddClaim(new Claim(ClaimTypes.Name, model.UserName));
+                identity.AddClaim(new Claim(ClaimTypes.Name, model.userId));
 
-                var principle = new ClaimsPrincipal(identity);
+                var principal = new ClaimsPrincipal(identity);
                 var properties = new AuthenticationProperties {IsPersistent = model.RememberMe};
-                await HttpContext.SignInAsync(principle, properties);
+                await HttpContext.SignInAsync(principal, properties);
 
                 return LocalRedirect(returnUrl ?? "/");
             }
 
-            ModelState.AddModelError(string.Empty, "Username or password is invalid.");
+            ModelState.AddModelError(string.Empty, "userId or password is invalid.");
             return View("Login", model);
         }
 

@@ -1,4 +1,5 @@
-﻿@model Post
+﻿@using Miniblog.Core.Configuration
+@model Post
 @inject IOptionsSnapshot<BlogSettings> settings
 
 <section id="comments">
@@ -6,10 +7,10 @@
         <h2>Comments</h2>
         @foreach (var comment in Model.Comments)
         {
-            <article id="@comment.ID" class="@(comment.IsAdmin ? "admin" : null)" itemprop="comment" itemscope itemtype="http://schema.org/Comment">
+            <article id="@comment.Id" class="@(comment.IsAdmin ? "admin" : null)" itemprop="comment" itemscope itemtype="http://schema.org/Comment">
                 <h3>
                     <time datetime="@comment.PubDate.ToString("s")" itemprop="datePublished">
-                        <a href="#@comment.ID" title="Permalink (#@comment.ID)">@comment.PubDate.ToString("MMMM d, yyyy")</a>
+                        <a href="#@comment.Id" title="Permalink (#@comment.Id)">@comment.PubDate.ToString("MMMM d, yyyy")</a>
                     </time>
                 </h3>
 
@@ -24,7 +25,7 @@
                     @if (User.Identity.IsAuthenticated)
                     {
                         <a class="noline" href="mailto:@comment.Email" title="Send email to @comment.Email">&#x2709;</a>
-                        <a class="delete noline" asp-controller="Blog" asp-Action="DeleteComment" asp-route-postid="@Model.ID" asp-route-commentid="@comment.ID" asp-route-afrt="@ViewData["afrt"]" title="Delete the comment...">Delete...</a>
+                        <a class="delete noline" asp-controller="Blog" asp-Action="DeleteComment" asp-route-postid="@Model.Id" asp-route-commentid="@comment.Id" asp-route-afrt="@ViewData["afrt"]" title="Delete the comment...">Delete...</a>
                     }
                 </div>
             </article>
@@ -37,7 +38,7 @@
                 <p>Be the first to post a comment</p>
             }
 
-            <form method="post" asp-controller="Blog" asp-action="AddComment" asp-route-postid="@Model.ID" asp-antiforgery="false">
+            <form method="post" asp-controller="Blog" asp-action="AddComment" asp-route-postid="@Model.Id" asp-antiforgery="false">
                 <h3>Post a comment</h3>
                 <br />
 

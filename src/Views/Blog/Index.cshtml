@@ -1,4 +1,5 @@
-﻿@model IEnumerable<Post>
+﻿@using Miniblog.Core.Configuration
+@model IEnumerable<Post>
 @inject IOptionsSnapshot<BlogSettings> settings
 @{
     int currentPage = int.Parse(ViewContext.RouteData.Values["page"] as string ?? "0");

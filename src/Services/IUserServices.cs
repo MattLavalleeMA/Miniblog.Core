@@ -1,7 +1,11 @@
-﻿namespace Miniblog.Core.Services
+﻿using WilderMinds.MetaWeblog;
+
+namespace Miniblog.Core.Services
 {
     public interface IUserServices
     {
-        bool ValidateUser(string username, string password);
+        UserInfo GetUser(string userId);
+
+        bool ValidateUser(string userId, string password);
     }
 }

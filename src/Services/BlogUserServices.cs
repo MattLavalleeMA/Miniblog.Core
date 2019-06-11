@@ -1,38 +1,62 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Miniblog.Core.Configuration;
+using WilderMinds.MetaWeblog;
 
 namespace Miniblog.Core.Services
 {
-    public class BlogUserServices: IUserServices
+    public class BlogUserServices : IUserServices
     {
-        private readonly IConfiguration _config;
+        private readonly UserSettings _userSettings;
 
-        public BlogUserServices(IConfiguration config)
+        public BlogUserServices(IOptionsMonitor<UserSettings> userSettings)
         {
-            _config = config;
+            _userSettings = userSettings.CurrentValue;
         }
 
-        public bool ValidateUser(string username, string password)
+        /// <inheritdoc />
+        public UserInfo GetUser(string userId)
         {
-            return username == _config["user:username"] && VerifyHashedPassword(password, _config);
+            User user = _userSettings.Users.First(u => u.UserId == userId);
+
+            return new UserInfo
+            {
+                email = user.Email,
+                firstname = user.FirstName,
+                lastname = user.LastName,
+                nickname = user.Nickname,
+                url = user.Url,
+                userid = user.UserId
+            };
         }
 
-        private bool VerifyHashedPassword(string password, IConfiguration config)
+        public bool ValidateUser(string userId, string password)
         {
-            byte[] saltBytes = Encoding.UTF8.GetBytes(config["user:salt"]);
+            User user = _userSettings.Users.First(u => u.UserId == userId);
+
+            return userId == user.UserId && HashedPassword(password) == user.Password;
+        }
+
+        private string HashedPassword(string password)
+        {
+            byte[] saltBytes = Encoding.UTF8.GetBytes(_userSettings.Salt);
 
             byte[] hashBytes = KeyDerivation.Pbkdf2(
                 password: password,
                 salt: saltBytes,
-                prf: KeyDerivationPrf.HMACSHA1,
+                prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 1000,
                 numBytesRequested: 256 / 8
             );
 
-            string hashText = BitConverter.ToString(hashBytes).Replace("-", string.Empty);
-            return hashText == config["user:password"];
+            string hashText = BitConverter
+                .ToString(hashBytes)
+                .Replace("-", string.Empty);
+
+            return hashText;
         }
     }
 }
