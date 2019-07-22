@@ -2,7 +2,7 @@
 
 namespace Miniblog.Core.Services
 {
-    public interface IUserServices
+    public interface IUserService
     {
         UserInfo GetUser(string userId);
 

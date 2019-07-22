@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Miniblog.Core.Configuration;
 using Miniblog.Core.Services;
 using Miniblog.Core.Services.Azure;
+using Miniblog.Core.StartupHelpers;
 using WebEssentials.AspNetCore.OutputCaching;
 using WebEssentials.AspNetCore.Pwa;
 using WebMarkupMin.AspNetCore2;
@@ -62,42 +63,36 @@ namespace Miniblog.Core
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.Configure<BlogSettings>(Configuration.GetSection("blog"));
-            services.Configure<BlobStorageSettings>(Configuration.GetSection("blobStorage"));
-            services.Configure<RedisSettings>(Configuration.GetSection("redis"));
-            services.Configure<UserSettings>(Configuration.GetSection("user"));
+            services.Configure<BlogSettings>(Configuration.GetSection(nameof(BlogSettings)));
+            services.Configure<BlobStorageSettings>(Configuration.GetSection(nameof(BlobStorageSettings)));
+            services.Configure<UserSettings>(Configuration.GetSection(nameof(UserSettings)));
 
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = Configuration.GetSection("redis")["ConnectionString"];
-                options.InstanceName = Configuration.GetSection("redis")["InstanceName"];
-            });
+            // Redis Cache
+            services.AddMiniblogRedisCache(Configuration);
 
-            services.AddSingleton<ICacheService, CacheService>();
-            services.AddSingleton<IUserServices, BlogUserServices>();
+            // Azure Blob Storage
             services.AddSingleton<IBlobStorageService, BlobStorageService>();
             services.AddSingleton<IBlogService, BlobBlogService>();
+
+            // User Authentication & Authorization
+            services.AddSingleton<IUserService, BlogUserService>();
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
-            services.AddMetaWeblog<MetaWeblogService>();
-
-            // Progressive Web Apps https://github.com/madskristensen/WebEssentials.AspNetCore.ServiceWorker
-            services.AddProgressiveWebApp(new PwaOptions {OfflineRoute = "/Shared/Offline/"});
-
-            // Output caching (https://github.com/madskristensen/WebEssentials.AspNetCore.OutputCaching)
-            services.AddOutputCaching(options =>
-                {
-                    options.Profiles["default"] = new OutputCacheProfile {Duration = 3600};
-                }
-            );
-
-            // Cookie authentication.
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
                     options.LoginPath = "/login/";
                     options.LogoutPath = "/logout/";
                 });
+
+            // Windows Live Writer support (https://github.com/shawnwildermuth/MetaWeblog)
+            services.AddMetaWeblog<MetaWeblogService>();
+
+            // Progressive Web Apps https://github.com/madskristensen/WebEssentials.AspNetCore.ServiceWorker
+            services.AddProgressiveWebApp(new PwaOptions {OfflineRoute = "/Shared/Offline/"});
+
+            // Output caching (https://github.com/madskristensen/WebEssentials.AspNetCore.OutputCaching)
+            services.AddOutputCaching(options => { options.Profiles["default"] = new OutputCacheProfile {Duration = 3600}; });
+
 
             // HTML minification (https://github.com/Taritsyn/WebMarkupMin)
             services.AddWebMarkupMin(options =>
@@ -120,9 +115,10 @@ namespace Miniblog.Core
                     .InlineImages(500);
             });
 
+            // ASP.NET Core Health Checks ( )https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-2.2)
             services.AddHealthChecks()
-                .AddAzureBlobStorage(Configuration.GetSection("blobStorage")["ConnectionString"], "Blob Storage")
-                .AddRedis(Configuration.GetSection("redis")["ConnectionString"], "Redis");
+                .AddAzureBlobStorage(Configuration.GetSection(nameof(BlobStorageSettings))["ConnectionString"], "Blob Storage")
+                .AddRedis(Configuration.GetSection(nameof(RedisCacheSettings))["ConnectionString"], "Redis");
         }
 
         // This method gets called by the runtime. Use this method to configure middleware for the HTTP request pipeline.
