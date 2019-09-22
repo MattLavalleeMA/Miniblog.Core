@@ -1,13 +1,11 @@
-﻿// Copyright (c) 2019 All rights reserved.
-// Code should follow the .NET Standard Guidelines:
-// https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/
-
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace Miniblog.Core.Services
+// ReSharper disable UnusedMemberInSuper.Global
+
+namespace Miniblog.Core.Services.Azure
 {
     public interface ICacheService
     {
@@ -22,14 +20,14 @@ namespace Miniblog.Core.Services
         JsonSerializerSettings DeserializationSettings { get; }
 
         void Set<T>(string key, T value);
-        Task SetAsync<T>(string key, T value, CancellationToken cancellationToken = default(CancellationToken));
+        Task SetAsync<T>(string key, T value, CancellationToken cancellationToken = default);
         bool TryGetValue<T>(string key, out T result);
         T GetOrAdd<T>(string key, Func<T> addMethod);
         T Get<T>(string key);
-        Task<T> GetAsync<T>(string key, CancellationToken cancellationToken = default(CancellationToken));
+        Task<T> GetAsync<T>(string key, CancellationToken cancellationToken = default);
         void Refresh<T>(string key);
-        Task RefreshAsync<T>(string key, CancellationToken cancellationToken = default(CancellationToken));
+        Task RefreshAsync<T>(string key, CancellationToken cancellationToken = default);
         void Remove<T>(string key);
-        Task RemoveAsync<T>(string key, CancellationToken cancellationToken = default(CancellationToken));
+        Task RemoveAsync<T>(string key, CancellationToken cancellationToken = default);
     }
 }

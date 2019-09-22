@@ -49,6 +49,9 @@ namespace Miniblog.Core.Services
             return Task.FromResult(posts);
         }
 
+        /// <inheritdoc />
+        public async Task<PagedResultModel<Post>> GetPostsPaged(int pageSize, int pageNumber = 1, string category = "", bool isAdmin = false) => throw new NotImplementedException();
+
         public Task<Post> GetPostBySlug(string slug)
         {
             Post post = _cache.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));

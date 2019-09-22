@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberHidesStaticFromOuterClass
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Miniblog.Core
 {
@@ -41,7 +44,7 @@ namespace Miniblog.Core
         {
             if (!condition)
             {
-                throw (TException)Activator.CreateInstance(typeof(TException), message);
+                throw (TException) Activator.CreateInstance(typeof(TException), message);
             }
         }
 

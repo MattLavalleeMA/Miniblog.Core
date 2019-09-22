@@ -32,27 +32,31 @@ namespace Miniblog.Core.Controllers
         }
 
         [Route("/{page:int?}")]
+        [Route("/page/{page:int?}")]
+        [Route("/blog/page/{page:int?}")]
         [OutputCache(Profile = "default")]
-        public async Task<IActionResult> Index([FromRoute] int page = 0)
+        public async Task<IActionResult> Index([FromRoute] int page = 1)
         {
-            IEnumerable<Post> posts = await _blog.GetPosts(_settings.Value.PostsPerPage, _settings.Value.PostsPerPage * page);
+            PagedResultModel<Post> posts = await _blog.GetPostsPaged(_settings.Value.PostsPerPage, page);
             ViewData["Title"] = _manifest.Name;
             ViewData["Description"] = _manifest.Description;
-            ViewData["prev"] = $"/{page + 1}/";
-            ViewData["next"] = $"/{(page <= 1 ? null : page - 1 + "/")}";
+            ViewData["prev"] = posts.HasPreviousPage ? $"/page/{page - 1}/" : string.Empty;
+            ViewData["next"] = posts.HasNextPage ? $"/page/{page + 1}/" : string.Empty;
             return View("~/Views/Blog/Index.cshtml", posts);
         }
 
+        [Route("/category/{category}/{page:int?}")]
         [Route("/blog/category/{category}/{page:int?}")]
         [OutputCache(Profile = "default")]
-        public async Task<IActionResult> Category(string category, int page = 0)
+        public async Task<IActionResult> Category(string category, int page = 1)
         {
-            IEnumerable<Post> posts = (await _blog.GetPostsByCategory(category)).Skip(_settings.Value.PostsPerPage * page)
-                .Take(_settings.Value.PostsPerPage);
+            PagedResultModel<Post> posts = await _blog.GetPostsPaged(_settings.Value.PostsPerPage, page, category);
             ViewData["Title"] = _manifest.Name + " " + category;
             ViewData["Description"] = $"Articles posted in the {category} category";
-            ViewData["prev"] = $"/blog/category/{category}/{page + 1}/";
-            ViewData["next"] = $"/blog/category/{category}/{(page <= 1 ? null : page - 1 + "/")}";
+            ViewData["prev"] = posts.HasPreviousPage ? $"/category/{category}/{page - 1}/" : string.Empty;
+            ViewData["next"] = posts.HasNextPage ? $"/category/{category}/{page + 1}/" : string.Empty;
+            //ViewData["prev"] = $"/blog/category/{category}/{page + 1}/";
+            //ViewData["next"] = $"/blog/category/{category}/{(page <= 1 ? null : page - 1 + "/")}";
             return View("~/Views/Blog/Index.cshtml", posts);
         }
 

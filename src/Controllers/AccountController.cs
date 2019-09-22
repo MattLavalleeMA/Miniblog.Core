@@ -35,10 +35,10 @@ namespace Miniblog.Core.Controllers
         {
             ViewData["ReturnUrl"] = returnUrl;
 
-            if (ModelState.IsValid && _userService.ValidateUser(model.userId, model.Password))
+            if (ModelState.IsValid && _userService.ValidateUser(model.UserId, model.Password))
             {
                 var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
-                identity.AddClaim(new Claim(ClaimTypes.Name, model.userId));
+                identity.AddClaim(new Claim(ClaimTypes.Name, model.UserId));
 
                 var principal = new ClaimsPrincipal(identity);
                 var properties = new AuthenticationProperties {IsPersistent = model.RememberMe};

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Miniblog.Core.Configuration;
 using Miniblog.Core.Services;
+using Miniblog.Core.Services.Azure;
 
 namespace Miniblog.Core.StartupHelpers
 {

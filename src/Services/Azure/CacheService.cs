@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Miniblog.Core.Serialization;
 using Newtonsoft.Json;
 
-namespace Miniblog.Core.Services
+namespace Miniblog.Core.Services.Azure
 {
     /// <summary>
     /// Defines the <see cref="CacheService" />, a strongly-typed wrapper for <see cref="IDistributedCache"/>.

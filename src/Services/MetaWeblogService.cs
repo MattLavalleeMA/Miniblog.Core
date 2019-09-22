@@ -11,6 +11,8 @@ using Miniblog.Core.Models;
 using WilderMinds.MetaWeblog;
 using Post = WilderMinds.MetaWeblog.Post;
 
+// ReSharper disable UnusedParameter.Global
+
 namespace Miniblog.Core.Services
 {
     /// <summary>
@@ -44,7 +46,7 @@ namespace Miniblog.Core.Services
         /// <param name="blog">The blog<see cref="IBlogService" /></param>
         /// <param name="blogSettings">The blogSettings<see cref="BlogSettings" /></param>
         /// <param name="context">The context<see cref="IHttpContextAccessor" /></param>
-        /// <param name="userServices">The userServices<see cref="IUserService" /></param>
+        /// <param name="userService">The userServices<see cref="IUserService" /></param>
         public MetaWeblogService(IBlogService blog, IOptionsMonitor<BlogSettings> blogSettings, IHttpContextAccessor context, IUserService userService)
         {
             _blog = blog;

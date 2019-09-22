@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using AutoMapper;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -51,7 +52,7 @@ namespace Miniblog.Core
             return WebHost.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    config = ConfigBuilder.BuildAppConfiguration(hostingContext, config, args);
+                    ConfigBuilder.BuildAppConfiguration(hostingContext, config, args);
                 })
                 .UseStartup<Startup>()
                 .UseKestrel(a => a.AddServerHeader = false);
@@ -62,6 +63,8 @@ namespace Miniblog.Core
         {
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddAutoMapper(typeof(Startup));
 
             services.Configure<BlogSettings>(Configuration.GetSection(nameof(BlogSettings)));
             services.Configure<BlobStorageSettings>(Configuration.GetSection(nameof(BlobStorageSettings)));

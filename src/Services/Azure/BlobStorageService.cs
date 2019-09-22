@@ -24,16 +24,19 @@ namespace Miniblog.Core.Services.Azure
         private const string SUMMARY_CACHE_FILE_NAME = "summary-cache.json";
 
         private readonly ICacheService _cacheService;
+        private readonly IMapper _mapper;
         private readonly CloudBlobContainer _filesContainer;
         private readonly CloudBlobContainer _postsContainer;
         private ConcurrentDictionary<string, Category> _categoryCache = new ConcurrentDictionary<string, Category>();
 
         private ConcurrentDictionary<string, PostBase> _postSummaryCache = new ConcurrentDictionary<string, PostBase>();
 
-        public BlobStorageService(IOptionsMonitor<BlobStorageSettings> blobStorageSettings, ICacheService cacheService)
+        public BlobStorageService(IOptionsMonitor<BlobStorageSettings> blobStorageSettings, ICacheService cacheService, IMapper mapper)
         {
             BlobStorageSettings blobStorageSettings1 = blobStorageSettings.CurrentValue;
             _cacheService = cacheService;
+
+            _mapper = mapper;
 
             CloudBlobClient blobClient = CloudStorageAccount.Parse(blobStorageSettings1.ConnectionString)
                 .CreateCloudBlobClient();
@@ -172,7 +175,7 @@ namespace Miniblog.Core.Services.Azure
                         null,
                         null,
                         cancellationToken));
-                    _postSummaryCache.TryAdd(post.Id, Mapper.Map<PostBase>(post));
+                    _postSummaryCache.TryAdd(post.Id, _mapper.Map<PostBase>(post));
                 }
             } while (token != null);
 

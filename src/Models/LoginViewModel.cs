@@ -5,7 +5,7 @@ namespace Miniblog.Core.Models
     public class LoginViewModel
     {
         [Required]
-        public string userId { get; set; }
+        public string UserId { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
