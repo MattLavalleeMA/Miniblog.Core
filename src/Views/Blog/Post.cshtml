@@ -74,7 +74,7 @@
     }
 }
 
-@if (User.Identity.IsAuthenticated)
+@if (User != null && User.Identity != null && User.Identity.IsAuthenticated)
 {
     @section Scripts {
         <script src="~/js/admin.js" async defer></script>

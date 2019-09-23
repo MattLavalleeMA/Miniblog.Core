@@ -76,7 +76,12 @@ namespace Miniblog.Core.Services.Azure
                 posts.Add(await GetPostById(postBase.Id));
             }
 
-            result.Items = posts;
+            if (posts.Any(p => p == null))
+            {
+                await _blobStorageService.InitializeSummaryCache();
+            }
+
+            result.Items = posts.Where(p => p != null);
 
             return result;
         }

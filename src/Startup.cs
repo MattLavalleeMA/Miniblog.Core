@@ -64,8 +64,6 @@ namespace Miniblog.Core
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.AddAutoMapper(typeof(Startup));
-
             services.Configure<BlogSettings>(Configuration.GetSection(nameof(BlogSettings)));
             services.Configure<BlobStorageSettings>(Configuration.GetSection(nameof(BlobStorageSettings)));
             services.Configure<UserSettings>(Configuration.GetSection(nameof(UserSettings)));
@@ -86,6 +84,8 @@ namespace Miniblog.Core
                     options.LoginPath = "/login/";
                     options.LogoutPath = "/logout/";
                 });
+
+            services.AddAutoMapper(typeof(Startup));
 
             // Windows Live Writer support (https://github.com/shawnwildermuth/MetaWeblog)
             services.AddMetaWeblog<MetaWeblogService>();
