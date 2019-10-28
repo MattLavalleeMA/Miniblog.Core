@@ -10,6 +10,8 @@ namespace Miniblog.Core.Services
 
         Task<IEnumerable<Post>> GetPostsByCategory(string category);
 
+        Task<PagedResultModel<Post>> GetPostsPaged(int pageSize, int pageNumber = 1, string category = "", bool isAdmin = false);
+
         Task<Post> GetPostBySlug(string slug);
 
         Task<Post> GetPostById(string id);

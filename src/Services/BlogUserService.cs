@@ -8,11 +8,11 @@ using WilderMinds.MetaWeblog;
 
 namespace Miniblog.Core.Services
 {
-    public class BlogUserServices : IUserServices
+    public class BlogUserService : IUserService
     {
         private readonly UserSettings _userSettings;
 
-        public BlogUserServices(IOptionsMonitor<UserSettings> userSettings)
+        public BlogUserService(IOptionsMonitor<UserSettings> userSettings)
         {
             _userSettings = userSettings.CurrentValue;
         }
@@ -20,6 +20,11 @@ namespace Miniblog.Core.Services
         /// <inheritdoc />
         public UserInfo GetUser(string userId)
         {
+            if (_userSettings.Users == null)
+            {
+                return new UserInfo();
+            }
+
             User user = _userSettings.Users.First(u => u.UserId == userId);
 
             return new UserInfo
@@ -35,6 +40,11 @@ namespace Miniblog.Core.Services
 
         public bool ValidateUser(string userId, string password)
         {
+            if (_userSettings.Users == null)
+            {
+                return false;
+            }
+
             User user = _userSettings.Users.First(u => u.UserId == userId);
 
             return userId == user.UserId && HashedPassword(password) == user.Password;

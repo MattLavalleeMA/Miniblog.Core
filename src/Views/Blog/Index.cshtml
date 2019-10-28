@@ -1,32 +1,32 @@
 ﻿@using Miniblog.Core.Configuration
-@model IEnumerable<Post>
+@model PagedResultModel<Post>
 @inject IOptionsSnapshot<BlogSettings> settings
 @{
     int currentPage = int.Parse(ViewContext.RouteData.Values["page"] as string ?? "0");
 }
 
-@foreach (var post in Model)
+@foreach (var post in Model.Items)
 {
     await Html.RenderPartialAsync("Post.cshtml", post);
 }
 
 <nav class="pagination container" aria-label="Pagination">
-    @if (Model.Any())
+    @if (Model.HasPreviousPage)
     {
         <a rel="prev" href="@ViewData["prev"]" title="Older posts">&laquo; Older</a>
     }
-    @if (currentPage > 0)
+    @if (Model.HasNextPage)
     {
         <a rel="next" href="@ViewData["next"]" title="Newer posts">Newer &raquo;</a>
     }
     <br /><br />
 
     @section Head {
-        @if (Model.Any())
+        @if (Model.HasPreviousPage)
         {
             <link rel="prev" href="@ViewData["prev"]" />
         }
-        @if (currentPage > 0)
+        @if (Model.HasNextPage)
         {
             <link rel="next" href="@ViewData["next"]" />
         }

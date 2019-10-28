@@ -2,7 +2,7 @@
 @model Post
 @inject IOptionsSnapshot<BlogSettings> settings
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = Model.Title + " - " + settings.Value.Name;
     ViewData["Description"] = Model.Excerpt;
     bool showFullPost = ViewContext.RouteData.Values.ContainsKey("slug");
     string host = Context.Request.Scheme + "://" + Context.Request.Host;
@@ -23,14 +23,14 @@
         }
     </header>
 
-    <div itemprop="articleBody mainEntityOfPage" cdnify>
+    <div itemprop="articleBody mainEntityOfPage">
         @if (showFullPost)
         {
-            Html.Raw(Model.RenderContent());
+            @Html.Raw(Model.RenderContent());
         }
         else
         {
-            Html.Raw(Model.Excerpt);
+            @Html.Raw(Model.Excerpt);
         }
     </div>
 
@@ -74,7 +74,7 @@
     }
 }
 
-@if (User.Identity.IsAuthenticated)
+@if (User != null && User.Identity != null && User.Identity.IsAuthenticated)
 {
     @section Scripts {
         <script src="~/js/admin.js" async defer></script>

@@ -11,6 +11,8 @@ using Miniblog.Core.Models;
 using WilderMinds.MetaWeblog;
 using Post = WilderMinds.MetaWeblog.Post;
 
+// ReSharper disable UnusedParameter.Global
+
 namespace Miniblog.Core.Services
 {
     /// <summary>
@@ -36,7 +38,7 @@ namespace Miniblog.Core.Services
         /// <summary>
         ///     Defines the _userServices
         /// </summary>
-        private readonly IUserServices _userServices;
+        private readonly IUserService _userService;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MetaWeblogService" /> class.
@@ -44,12 +46,12 @@ namespace Miniblog.Core.Services
         /// <param name="blog">The blog<see cref="IBlogService" /></param>
         /// <param name="blogSettings">The blogSettings<see cref="BlogSettings" /></param>
         /// <param name="context">The context<see cref="IHttpContextAccessor" /></param>
-        /// <param name="userServices">The userServices<see cref="IUserServices" /></param>
-        public MetaWeblogService(IBlogService blog, IOptionsMonitor<BlogSettings> blogSettings, IHttpContextAccessor context, IUserServices userServices)
+        /// <param name="userService">The userServices<see cref="IUserService" /></param>
+        public MetaWeblogService(IBlogService blog, IOptionsMonitor<BlogSettings> blogSettings, IHttpContextAccessor context, IUserService userService)
         {
             _blog = blog;
             _blogSettings = blogSettings.CurrentValue;
-            _userServices = userServices;
+            _userService = userService;
             _context = context;
         }
 
@@ -652,7 +654,7 @@ namespace Miniblog.Core.Services
         public UserInfo GetUserInfo(string key, string userId, string password)
         {
             ValidateUser(userId, password);
-            return _userServices.GetUser(userId);
+            return _userService.GetUser(userId);
         }
 
         /// <summary>
@@ -676,12 +678,12 @@ namespace Miniblog.Core.Services
         /// <param name="password">The password<see cref="string" /></param>
         private void ValidateUser(string userId, string password)
         {
-            if (_userServices.ValidateUser(userId, password) == false)
+            if (_userService.ValidateUser(userId, password) == false)
             {
                 throw new MetaWeblogException("Unauthorized");
             }
 
-            UserInfo user = _userServices.GetUser(userId);
+            UserInfo user = _userService.GetUser(userId);
 
             var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
             identity.AddClaim(new Claim(ClaimTypes.Name, user.userid));

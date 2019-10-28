@@ -12,11 +12,11 @@ namespace Miniblog.Core.Controllers
     [Authorize]
     public class AccountController : Controller
     {
-        private readonly IUserServices _userServices;
+        private readonly IUserService _userService;
 
-        public AccountController(IUserServices userServices)
+        public AccountController(IUserService userService)
         {
-            _userServices = userServices;
+            _userService = userService;
         }
 
 
@@ -35,10 +35,10 @@ namespace Miniblog.Core.Controllers
         {
             ViewData["ReturnUrl"] = returnUrl;
 
-            if (ModelState.IsValid && _userServices.ValidateUser(model.userId, model.Password))
+            if (ModelState.IsValid && _userService.ValidateUser(model.UserId, model.Password))
             {
                 var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
-                identity.AddClaim(new Claim(ClaimTypes.Name, model.userId));
+                identity.AddClaim(new Claim(ClaimTypes.Name, model.UserId));
 
                 var principal = new ClaimsPrincipal(identity);
                 var properties = new AuthenticationProperties {IsPersistent = model.RememberMe};

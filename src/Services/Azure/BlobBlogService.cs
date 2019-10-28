@@ -6,7 +6,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Miniblog.Core.Abstractions;
 using Miniblog.Core.Models;
+using Remotion.Linq.Clauses;
 
 namespace Miniblog.Core.Services.Azure
 {
@@ -14,19 +16,16 @@ namespace Miniblog.Core.Services.Azure
     {
         private readonly IBlobStorageService _blobStorageService;
         private readonly IHttpContextAccessor _contextAccessor;
+        private readonly IMapper _mapper;
 
 
-        public BlobBlogService(IBlobStorageService blobStorageService, IHttpContextAccessor contextAccessor)
+        public BlobBlogService(IBlobStorageService blobStorageService, IHttpContextAccessor contextAccessor, IMapper mapper)
         {
             _blobStorageService = blobStorageService;
 
             _contextAccessor = contextAccessor;
 
-            Mapper.Initialize(config =>
-            {
-                config.CreateMap<Post, PostBase>()
-                    .ReverseMap();
-            });
+            _mapper = mapper;
         }
 
         /// <inheritdoc />
@@ -47,6 +46,46 @@ namespace Miniblog.Core.Services.Azure
             return posts;
         }
 
+        public async Task<PagedResultModel<Post>> GetPostsPaged(int pageSize, int pageNumber = 1, string category = "", bool isAdmin = false)
+        {
+            IEnumerable<PostBase> postSummaries = _blobStorageService
+                .PostCache
+                .Where(p => category == string.Empty || p.Categories.Contains(category))
+                .Where(p => p.PubDate <= DateTime.UtcNow && (p.IsPublished || isAdmin))
+                .OrderByDescending(p => p.PubDate)
+                .ToArray();
+
+            PagedResult<PostBase> pagedResult = new PagedResult<PostBase>(postSummaries, pageSize, pageNumber);
+
+            PagedResultModel<Post> result = new PagedResultModel<Post>
+            {
+                HasNextPage = pagedResult.HasNextPage,
+                HasPreviousPage = pagedResult.HasPreviousPage,
+                NextPageNumber = pagedResult.NextPageNumber,
+                PreviousPageNumber = pagedResult.PreviousPageNumber,
+                PageNumber = pagedResult.PageNumber,
+                PageSize = pagedResult.PageSize,
+                TotalPages = pagedResult.TotalPages,
+                TotalItems = pagedResult.TotalItems
+            };
+
+            List<Post> posts = new List<Post>();
+
+            foreach (PostBase postBase in pagedResult.Items)
+            {
+                posts.Add(await GetPostById(postBase.Id));
+            }
+
+            if (posts.Any(p => p == null))
+            {
+                await _blobStorageService.InitializeSummaryCache();
+            }
+
+            result.Items = posts.Where(p => p != null);
+
+            return result;
+        }
+
         /// <inheritdoc />
         public async Task<IEnumerable<Post>> GetPostsByCategory(string category)
         {
@@ -61,7 +100,7 @@ namespace Miniblog.Core.Services.Azure
 
             IEnumerable<Post> posts =
                 await Task.Run(
-                    () => Mapper.Map<IEnumerable<Post>>(
+                    () => _mapper.Map<IEnumerable<Post>>(
                         _blobStorageService
                             .PostCache
                             .Where(
@@ -93,10 +132,7 @@ namespace Miniblog.Core.Services.Azure
         }
 
         /// <inheritdoc />
-        public async Task<Post> GetPostById(string id)
-        {
-            return await _blobStorageService.GetPostByIdAsync(id);
-        }
+        public async Task<Post> GetPostById(string id) => await _blobStorageService.GetPostByIdAsync(id);
 
         /// <inheritdoc />
         public Task<IEnumerable<string>> GetCategories()

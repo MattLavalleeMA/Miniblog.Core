@@ -1,10 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Extensions.Configuration;
 
-namespace Miniblog.Core
+namespace Miniblog.Core.StartupHelpers
 {
     public static class ConfigBuilder
     {
@@ -29,9 +30,16 @@ namespace Miniblog.Core
                 return configBuilder;
             }
 
-            var azureServiceTokenProvider = new AzureServiceTokenProvider();
-            var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-            configBuilder.AddAzureKeyVault($"https://{built["AzureKeyVault:Name"]}.vault.azure.net/", keyVaultClient, new PrefixKeyVaultSecretManager(built["AzureKeyVault:Prefix"]));
+            try
+            {
+                var azureServiceTokenProvider = new AzureServiceTokenProvider();
+                var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+                configBuilder.AddAzureKeyVault($"https://{built["AzureKeyVault:Name"]}.vault.azure.net/", keyVaultClient, new PrefixKeyVaultSecretManager(built["AzureKeyVault:Prefix"]));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
 
             return configBuilder;
         }
