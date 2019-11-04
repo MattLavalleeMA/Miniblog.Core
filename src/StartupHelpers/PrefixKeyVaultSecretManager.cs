@@ -13,13 +13,6 @@ namespace Miniblog.Core.StartupHelpers
             _prefix = $"{prefix}-";
         }
 
-        public bool Load(SecretItem secret)
-        {
-            // Load a vault secret when its secret name starts with the
-            // prefix. Other secrets won't be loaded.
-            return secret.Identifier.Name.StartsWith(_prefix);
-        }
-
         public string GetKey(SecretBundle secret)
         {
             // Remove the prefix from the secret name and replace two
@@ -28,6 +21,13 @@ namespace Miniblog.Core.StartupHelpers
             // Key Vault doesn't allow a colon in secret names.
             return secret.SecretIdentifier.Name.Substring(_prefix.Length)
                 .Replace("--", ConfigurationPath.KeyDelimiter);
+        }
+
+        public bool Load(SecretItem secret)
+        {
+            // Load a vault secret when its secret name starts with the
+            // prefix. Other secrets won't be loaded.
+            return secret.Identifier.Name.StartsWith(_prefix);
         }
     }
 }

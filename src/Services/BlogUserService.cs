@@ -14,7 +14,29 @@ namespace Miniblog.Core.Services
 
         public BlogUserService(IOptionsMonitor<UserSettings> userSettings)
         {
-            _userSettings = userSettings.CurrentValue;
+            if (userSettings != null)
+            {
+                _userSettings = userSettings.CurrentValue;
+            }
+        }
+
+        private string HashedPassword(string password)
+        {
+            byte[] saltBytes = Encoding.UTF8.GetBytes(_userSettings.Salt);
+
+            byte[] hashBytes = KeyDerivation.Pbkdf2(
+                password: password,
+                salt: saltBytes,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 1000,
+                numBytesRequested: 256 / 8
+            );
+
+            string hashText = BitConverter
+                .ToString(hashBytes)
+                .Replace("-", string.Empty, StringComparison.CurrentCulture);
+
+            return hashText;
         }
 
         /// <inheritdoc />
@@ -48,25 +70,6 @@ namespace Miniblog.Core.Services
             User user = _userSettings.Users.First(u => u.UserId == userId);
 
             return userId == user.UserId && HashedPassword(password) == user.Password;
-        }
-
-        private string HashedPassword(string password)
-        {
-            byte[] saltBytes = Encoding.UTF8.GetBytes(_userSettings.Salt);
-
-            byte[] hashBytes = KeyDerivation.Pbkdf2(
-                password: password,
-                salt: saltBytes,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 1000,
-                numBytesRequested: 256 / 8
-            );
-
-            string hashText = BitConverter
-                .ToString(hashBytes)
-                .Replace("-", string.Empty);
-
-            return hashText;
         }
     }
 }

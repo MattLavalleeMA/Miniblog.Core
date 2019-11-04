@@ -1,9 +1,7 @@
 ﻿(function () {
-
     // File upload
     function handleFileSelect(event) {
         if (window.File && window.FileList && window.FileReader) {
-
             var files = event.target.files;
 
             for (var i = 0; i < files.length; i++) {
@@ -24,7 +22,6 @@
                         tinymce.activeEditor.execCommand('mceInsertContent', false, image.outerHTML);
                     };
                     image.src = this.result;
-
                 });
 
                 reader.readAsDataURL(file);
@@ -51,7 +48,6 @@
     var editPost = document.getElementById("Content");
 
     if (edit && editPost) {
-
         if (typeof window.orientation !== "undefined" || navigator.userAgent.indexOf('IEMobile') !== -1) {
             tinymce.init({
                 selector: '#Content',
@@ -123,9 +119,7 @@
     var selecttag = document.getElementById("selecttag");
     var categories = document.getElementById("categories");
     if (selecttag && categories) {
-
         selecttag.onchange = function () {
-
             var phv = selecttag.placeholder;
             var val = selecttag.value.toLowerCase();
 
@@ -156,5 +150,4 @@
             selecttag.value = "";
         };
     }
-
 })();

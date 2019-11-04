@@ -8,21 +8,21 @@ namespace Miniblog.Core.Models
     public class Comment
     {
         [Required]
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Author { get; set; }
 
         [Required]
-        public string Author { get; set; }
+        public string Content { get; set; }
 
         [Required, EmailAddress]
         public string Email { get; set; }
 
         [Required]
-        public string Content { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+
+        public bool IsAdmin { get; set; }
 
         [Required]
         public DateTime PubDate { get; set; } = DateTime.UtcNow;
-
-        public bool IsAdmin { get; set; }
 
         public string GetGravatar()
         {

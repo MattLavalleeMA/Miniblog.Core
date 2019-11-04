@@ -3,7 +3,7 @@
 // https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/
 
 using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -29,107 +29,6 @@ namespace Miniblog.Core.Controllers
             _blog = blog;
             _settings = settings;
             _manifest = manifest;
-        }
-
-        [Route("/{page:int?}")]
-        [Route("/page/{page:int?}")]
-        [Route("/blog/page/{page:int?}")]
-        [OutputCache(Profile = "default")]
-        public async Task<IActionResult> Index([FromRoute] int page = 1)
-        {
-            PagedResultModel<Post> posts = await _blog.GetPostsPaged(_settings.Value.PostsPerPage, page);
-            ViewData["Title"] = _manifest.Name;
-            ViewData["Description"] = _manifest.Description;
-            ViewData["prev"] = posts.HasPreviousPage ? $"/page/{page - 1}/" : string.Empty;
-            ViewData["next"] = posts.HasNextPage ? $"/page/{page + 1}/" : string.Empty;
-            return View("~/Views/Blog/Index.cshtml", posts);
-        }
-
-        [Route("/category/{category}/{page:int?}")]
-        [Route("/blog/category/{category}/{page:int?}")]
-        [OutputCache(Profile = "default")]
-        public async Task<IActionResult> Category(string category, int page = 1)
-        {
-            PagedResultModel<Post> posts = await _blog.GetPostsPaged(_settings.Value.PostsPerPage, page, category);
-            ViewData["Title"] = _manifest.Name + " " + category;
-            ViewData["Description"] = $"Articles posted in the {category} category";
-            ViewData["prev"] = posts.HasPreviousPage ? $"/category/{category}/{page - 1}/" : string.Empty;
-            ViewData["next"] = posts.HasNextPage ? $"/category/{category}/{page + 1}/" : string.Empty;
-            //ViewData["prev"] = $"/blog/category/{category}/{page + 1}/";
-            //ViewData["next"] = $"/blog/category/{category}/{(page <= 1 ? null : page - 1 + "/")}";
-            return View("~/Views/Blog/Index.cshtml", posts);
-        }
-
-        // This is for redirecting potential existing URLs from the old Miniblog URL format
-        [Route("/post/{slug}")]
-        [HttpGet]
-        public IActionResult Redirects(string slug) => LocalRedirectPermanent($"/blog/{slug}");
-
-        [Route("/blog/{slug?}")]
-        [OutputCache(Profile = "default")]
-        public async Task<IActionResult> Post(string slug)
-        {
-            Post post = await _blog.GetPostBySlug(slug);
-
-            if (post != null)
-            {
-                return View(post);
-            }
-
-            return NotFound();
-        }
-
-        [Route("/blog/edit/{id?}")]
-        [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> Edit(string id)
-        {
-            ViewData["AllCats"] = (await _blog.GetCategories()).ToList();
-
-            if (string.IsNullOrEmpty(id))
-            {
-                return View(new Post());
-            }
-
-            Post post = await _blog.GetPostById(id);
-
-            if (post != null)
-            {
-                return View(post);
-            }
-
-            return NotFound();
-        }
-
-        [Route("/blog/{slug?}")]
-        [HttpPost]
-        [Authorize]
-        [AutoValidateAntiforgeryToken]
-        public async Task<IActionResult> UpdatePost(Post post)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View("Edit", post);
-            }
-
-            Post existing = await _blog.GetPostById(post.Id) ?? post;
-            string categories = Request.Form["categories"];
-
-            existing.Categories = categories.Split(",", StringSplitOptions.RemoveEmptyEntries)
-                .Select(c => c.Trim()
-                    .ToLowerInvariant())
-                .ToList();
-            existing.Title = post.Title.Trim();
-            existing.Slug = !string.IsNullOrWhiteSpace(post.Slug) ? post.Slug.Trim() : PostBase.CreateSlug(post.Title);
-            existing.IsPublished = post.IsPublished;
-            existing.Content = post.Content.Trim();
-            existing.Excerpt = post.Excerpt.Trim();
-
-            await SaveFilesToDisk(existing);
-
-            await _blog.SavePost(existing);
-
-            return Redirect(post.GetEncodedLink());
         }
 
         private async Task SaveFilesToDisk(Post post)
@@ -164,32 +63,16 @@ namespace Miniblog.Core.Controllers
                     .ConfigureAwait(false);
 
                 img.Attributes.Remove(fileNameNode);
-                post.Content = post.Content.Replace(match.Value, img.OuterXml);
+                post.Content = post.Content.Replace(match.Value, img.OuterXml, StringComparison.CurrentCulture);
             }
-        }
-
-        [Route("/blog/deletepost/{id}")]
-        [HttpPost]
-        [Authorize]
-        [AutoValidateAntiforgeryToken]
-        public async Task<IActionResult> DeletePost(string id)
-        {
-            Post existing = await _blog.GetPostById(id);
-
-            if (existing != null)
-            {
-                await _blog.DeletePost(existing);
-                return Redirect("/");
-            }
-
-            return NotFound();
         }
 
         [Route("/blog/comment/{postId}")]
         [HttpPost]
         public async Task<IActionResult> AddComment(string postId, Comment comment)
         {
-            Post post = await _blog.GetPostById(postId);
+            Post post = await _blog.GetPostById(postId)
+                .ConfigureAwait(false);
 
             if (!ModelState.IsValid)
             {
@@ -201,27 +84,50 @@ namespace Miniblog.Core.Controllers
                 return NotFound();
             }
 
-            comment.IsAdmin = User.Identity.IsAuthenticated;
-            comment.Content = comment.Content.Trim();
-            comment.Author = comment.Author.Trim();
-            comment.Email = comment.Email.Trim();
-
-            // the website form key should have been removed by javascript
-            // unless the comment was posted by a spam robot
-            if (!Request.Form.ContainsKey("website"))
+            if (comment != null)
             {
-                post.Comments.Add(comment);
-                await _blog.SavePost(post);
+                comment.IsAdmin = User.Identity.IsAuthenticated;
+                comment.Content = comment.Content.Trim();
+                comment.Author = comment.Author.Trim();
+                comment.Email = comment.Email.Trim();
+
+                // the website form key should have been removed by javascript
+                // unless the comment was posted by a spam robot
+                if (!Request.Form.ContainsKey("website"))
+                {
+                    post.Comments.Add(comment);
+                    await _blog.SavePost(post)
+                        .ConfigureAwait(false);
+                }
+
+                return Redirect(post.GetEncodedLink() + "#" + comment.Id);
             }
 
-            return Redirect(post.GetEncodedLink() + "#" + comment.Id);
+            return Redirect("/");
+        }
+
+        [Route("/category/{category}/{page:int?}")]
+        [Route("/blog/category/{category}/{page:int?}")]
+        [OutputCache(Profile = "default")]
+        public async Task<IActionResult> Category(string category, int page = 1)
+        {
+            PagedResultModel<Post> posts = await _blog.GetPostsPaged(_settings.Value.PostsPerPage, page, category)
+                .ConfigureAwait(false);
+            ViewData["Title"] = _manifest.Name + " " + category;
+            ViewData["Description"] = $"Articles posted in the {category} category";
+            ViewData["prev"] = posts.HasPreviousPage ? $"/category/{category}/{page - 1}/" : string.Empty;
+            ViewData["next"] = posts.HasNextPage ? $"/category/{category}/{page + 1}/" : string.Empty;
+            //ViewData["prev"] = $"/blog/category/{category}/{page + 1}/";
+            //ViewData["next"] = $"/blog/category/{category}/{(page <= 1 ? null : page - 1 + "/")}";
+            return View("~/Views/Blog/Index.cshtml", posts);
         }
 
         [Route("/blog/comment/{postId}/{commentId}")]
         [Authorize]
         public async Task<IActionResult> DeleteComment(string postId, string commentId)
         {
-            Post post = await _blog.GetPostById(postId);
+            Post post = await _blog.GetPostById(postId)
+                .ConfigureAwait(false);
 
             if (post == null)
             {
@@ -236,9 +142,132 @@ namespace Miniblog.Core.Controllers
             }
 
             post.Comments.Remove(comment);
-            await _blog.SavePost(post);
+            await _blog.SavePost(post)
+                .ConfigureAwait(false);
 
             return Redirect(post.GetEncodedLink() + "#comments");
+        }
+
+        [Route("/blog/deletepost/{id}")]
+        [HttpPost]
+        [Authorize]
+        [AutoValidateAntiforgeryToken]
+        public async Task<IActionResult> DeletePost(string id)
+        {
+            Post existing = await _blog.GetPostById(id)
+                .ConfigureAwait(false);
+
+            if (existing != null)
+            {
+                await _blog.DeletePost(existing)
+                    .ConfigureAwait(false);
+                return Redirect("/");
+            }
+
+            return NotFound();
+        }
+
+        [Route("/blog/edit/{id?}")]
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Edit(string id)
+        {
+            ViewData["AllCats"] = (await _blog.GetCategories()
+                .ConfigureAwait(false)).ToList();
+
+            if (string.IsNullOrEmpty(id))
+            {
+                return View(new Post());
+            }
+
+            Post post = await _blog.GetPostById(id)
+                .ConfigureAwait(false);
+
+            if (post != null)
+            {
+                return View(post);
+            }
+
+            return NotFound();
+        }
+
+        [Route("/{page:int?}")]
+        [Route("/page/{page:int?}")]
+        [Route("/blog/page/{page:int?}")]
+        [OutputCache(Profile = "default")]
+        public async Task<IActionResult> Index([FromRoute] int page = 1)
+        {
+            PagedResultModel<Post> posts = await _blog.GetPostsPaged(_settings.Value.PostsPerPage, page)
+                .ConfigureAwait(false);
+            ViewData["Title"] = _manifest.Name;
+            ViewData["Description"] = _manifest.Description;
+            ViewData["prev"] = posts.HasPreviousPage ? $"/page/{page - 1}/" : string.Empty;
+            ViewData["next"] = posts.HasNextPage ? $"/page/{page + 1}/" : string.Empty;
+            return View("~/Views/Blog/Index.cshtml", posts);
+        }
+
+        [Route("/blog/{slug?}")]
+        [OutputCache(Profile = "default")]
+        public async Task<IActionResult> Post(string slug)
+        {
+            Post post = await _blog.GetPostBySlug(slug)
+                .ConfigureAwait(false);
+
+            if (post != null)
+            {
+                return View(post);
+            }
+
+            return NotFound();
+        }
+
+        // This is for redirecting potential existing URLs from the old Miniblog URL format
+        [Route("/post/{slug}")]
+        [HttpGet]
+        public IActionResult Redirects(string slug) => LocalRedirectPermanent($"/blog/{slug}");
+
+        [Route("/blog/{slug?}")]
+        [HttpPost]
+        [Authorize]
+        [AutoValidateAntiforgeryToken]
+        [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "<Pending>")]
+        public async Task<IActionResult> UpdatePost(Post post)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Edit", post);
+            }
+
+            if (post == null)
+            {
+                return Redirect("/");
+            }
+
+            Post existing = await _blog.GetPostById(post.Id)
+                    .ConfigureAwait(false) ??
+                post;
+            string categories = Request.Form["categories"];
+
+            foreach (string category in categories.Split(",", StringSplitOptions.RemoveEmptyEntries)
+                .Select(c => c.Trim()
+                    .ToLowerInvariant()))
+            {
+                existing.Categories.Add(category);
+            }
+
+            existing.Title = post.Title.Trim();
+            existing.Slug = !string.IsNullOrWhiteSpace(post.Slug) ? post.Slug.Trim() : PostBase.CreateSlug(post.Title);
+            existing.IsPublished = post.IsPublished;
+            existing.Content = post.Content.Trim();
+            existing.Excerpt = post.Excerpt.Trim();
+
+            await SaveFilesToDisk(existing)
+                .ConfigureAwait(false);
+
+            await _blog.SavePost(existing)
+                .ConfigureAwait(false);
+
+            return Redirect(post.GetEncodedLink());
         }
     }
 }

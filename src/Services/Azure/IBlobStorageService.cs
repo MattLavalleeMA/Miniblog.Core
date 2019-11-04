@@ -12,15 +12,22 @@ namespace Miniblog.Core.Services.Azure
 {
     public interface IBlobStorageService
     {
-        IEnumerable<PostBase> PostCache { get; }
         IEnumerable<Category> CategoryCache { get; }
         bool IsInitialized { get; }
-        Task InitializeAsync(CancellationToken cancellationToken = default);
-        Task InitializeSummaryCache(CancellationToken cancellationToken = default);
-        Task InitializeCategoryCache(CancellationToken cancellationToken = default);
-        Task<Post> GetPostByIdAsync(string postId, CancellationToken cancellationToken = default);
+        IEnumerable<PostBase> PostCache { get; }
+
         Task DeletePostByIdAsync(string postId, CancellationToken cancellationToken = default);
-        Task<Uri> SavePostAsync(Post post, CancellationToken cancellationToken = default);
+
+        Task<Post> GetPostByIdAsync(string postId, CancellationToken cancellationToken = default);
+
+        Task InitializeAsync(CancellationToken cancellationToken = default);
+
+        Task InitializeCategoryCache(CancellationToken cancellationToken = default);
+
+        Task InitializeSummaryCache(CancellationToken cancellationToken = default);
+
         Task<Uri> SaveFileAsync(byte[] dataBytes, string fileName, CancellationToken cancellationToken = default);
+
+        Task<Uri> SavePostAsync(Post post, CancellationToken cancellationToken = default);
     }
 }

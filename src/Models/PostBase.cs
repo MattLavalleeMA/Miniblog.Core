@@ -13,13 +13,17 @@ namespace Miniblog.Core.Models
 {
     public class PostBase
     {
-        public IList<string> Categories { get; set; } = new List<string>();
+        public IList<string> Categories { get; } = new List<string>();
+
+        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+
+        public DateTime DateModified { get; set; } = DateTime.UtcNow;
 
         [Required]
         public string Excerpt { get; set; }
 
         [Required]
-        public string Id { get; set; } = DateTime.UtcNow.Ticks.ToString();
+        public string Id { get; set; } = DateTime.UtcNow.Ticks.ToString(new NumberFormatInfo());
 
         public bool IsPublished
         {
@@ -32,9 +36,6 @@ namespace Miniblog.Core.Models
                 }
             }
         }
-
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-        public DateTime DateModified { get; set; } = DateTime.UtcNow;
 
         public DateTime PubDate { get; set; } = DateTime.MaxValue;
 
@@ -75,14 +76,20 @@ namespace Miniblog.Core.Models
             return sb.ToString();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "<Pending>")]
         public static string CreateSlug(string title)
         {
-            title = title.ToLowerInvariant()
-                .Replace(" ", "-");
-            title = RemoveDiacritics(title);
-            title = RemoveReservedUrlCharacters(title);
+            if (title != null)
+            {
+                title = title.ToLowerInvariant()
+                    .Replace(" ", "-", StringComparison.CurrentCulture);
+                title = RemoveDiacritics(title);
+                title = RemoveReservedUrlCharacters(title);
 
-            return title.ToLowerInvariant();
+                return title.ToLowerInvariant();
+            }
+
+            return string.Empty;
         }
 
         public string GetEncodedLink() => $"/blog/{WebUtility.UrlEncode(Slug)}/";

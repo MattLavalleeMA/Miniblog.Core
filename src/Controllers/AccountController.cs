@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Miniblog.Core.Models;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using Miniblog.Core.Services;
 
 namespace Miniblog.Core.Controllers
@@ -18,7 +18,6 @@ namespace Miniblog.Core.Controllers
         {
             _userService = userService;
         }
-
 
         [Route("/login")]
         [AllowAnonymous]
@@ -41,7 +40,7 @@ namespace Miniblog.Core.Controllers
                 identity.AddClaim(new Claim(ClaimTypes.Name, model.UserId));
 
                 var principal = new ClaimsPrincipal(identity);
-                var properties = new AuthenticationProperties {IsPersistent = model.RememberMe};
+                var properties = new AuthenticationProperties { IsPersistent = model.RememberMe };
                 await HttpContext.SignInAsync(principal, properties);
 
                 return LocalRedirect(returnUrl ?? "/");

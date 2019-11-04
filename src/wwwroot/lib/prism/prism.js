@@ -15,7 +15,6 @@ var _self = (typeof window !== 'undefined')
  */
 
 var Prism = (function () {
-
     // Private helper vars
     var lang = /\blang(?:uage)?-([\w-]+)\b/i;
     var uniqueId = 0;
@@ -111,7 +110,6 @@ var Prism = (function () {
 
                 for (var token in grammar) {
                     if (grammar.hasOwnProperty(token)) {
-
                         if (token == before) {
                             for (var newToken in insert) {
                                 if (insert.hasOwnProperty(newToken)) {
@@ -309,7 +307,6 @@ var Prism = (function () {
 
                     // Don’t cache length as it changes during the loop
                     for (var i = index, pos = startPos; i < strarr.length; pos += strarr[i].length, ++i) {
-
                         var str = strarr[i];
 
                         if (strarr.length > text.length) {
@@ -489,7 +486,6 @@ var Prism = (function () {
         }).join(' ');
 
         return '<' + env.tag + ' class="' + env.classes.join(' ') + '"' + (attributes ? ' ' + attributes : '') + '>' + env.content + '</' + env.tag + '>';
-
     };
 
     if (!_self.document) {
@@ -537,7 +533,6 @@ var Prism = (function () {
     }
 
     return _self.Prism;
-
 })();
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -584,7 +579,6 @@ Prism.languages.markup = {
                     'namespace': /^[^\s>\/:]+:/
                 }
             }
-
         }
     },
     'entity': /&#?[\da-z]{1,8};/i
@@ -595,7 +589,6 @@ Prism.languages.markup['tag'].inside['attr-value'].inside['entity'] =
 
 // Plugin to make entity title show the real entity, idea by Roman Komarov
 Prism.hooks.add('wrap', function (env) {
-
     if (env.type === 'entity') {
         env.attributes['title'] = env.content.replace(/&amp;/, '&');
     }
@@ -1357,7 +1350,6 @@ Prism.languages.ts = Prism.languages.typescript;
 })();
 
 (function () {
-
     if (typeof self === 'undefined' || !self.Prism || !self.document) {
         return;
     }
@@ -1493,7 +1485,6 @@ Prism.languages.ts = Prism.languages.typescript;
         env.element.insertBefore(prompt, env.element.firstChild);
         commandLine.complete = true;
     });
-
 }());
 
 (function () {

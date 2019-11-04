@@ -16,18 +16,6 @@ namespace Miniblog.Core.Services.Azure
     /// </summary>
     public class CacheService : ICacheService
     {
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets or sets json serialization settings.
-        /// </summary>
-        public JsonSerializerSettings SerializationSettings { get; private set; }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets or sets json deserialization settings.
-        /// </summary>
-        public JsonSerializerSettings DeserializationSettings { get; private set; }
-
         /// <summary>
         /// Defines the _cache
         /// </summary>
@@ -75,49 +63,17 @@ namespace Miniblog.Core.Services.Azure
             };
         }
 
+        /// <inheritdoc />
         /// <summary>
-        /// Set a cache value
+        /// Gets or sets json deserialization settings.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key">The key<see cref="string"/></param>
-        /// <param name="value">The value<see cref="T"/></param>
-        public void Set<T>(string key, T value)
-        {
-            key = $"{typeof(T).Name}_{key}";
-            string obj = JsonConvert.SerializeObject(value, SerializationSettings);
-            try
-            {
-                _cache.Set(key, Encoding.UTF8.GetBytes(obj));
-                _logger.LogTrace($"Cache Set: {key}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Cache Set: {key}", ex);
-            }
-        }
+        public JsonSerializerSettings DeserializationSettings { get; private set; }
 
+        /// <inheritdoc />
         /// <summary>
-        /// SetAsync
+        /// Gets or sets json serialization settings.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key">The key<see cref="string"/></param>
-        /// <param name="value">The value<see cref="T"/></param>
-        /// <param name="cancellationToken">The cancellationToken<see cref="CancellationToken"/></param>
-        /// <returns>The <see cref="Task"/></returns>
-        public async Task SetAsync<T>(string key, T value, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                key = $"{typeof(T).Name}_{key}";
-                string obj = JsonConvert.SerializeObject(value, SerializationSettings);
-                await _cache.SetAsync(key, Encoding.UTF8.GetBytes(obj), cancellationToken);
-                _logger.LogTrace($"Cache Set: {key}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Cache Set: {key}", ex);
-            }
-        }
+        public JsonSerializerSettings SerializationSettings { get; private set; }
 
         /// <summary>
         /// Get
@@ -174,19 +130,6 @@ namespace Miniblog.Core.Services.Azure
                 _logger.LogError($"Cache Get: {key}", ex);
                 return default;
             }
-        }
-
-        /// <summary>
-        /// The TryGetValue
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key">The key<see cref="string"/></param>
-        /// <param name="result">The result<see cref="T"/></param>
-        /// <returns>The <see cref="bool"/></returns>
-        public bool TryGetValue<T>(string key, out T result)
-        {
-            result = Get<T>(key);
-            return result != null;
         }
 
         /// <summary>
@@ -262,6 +205,63 @@ namespace Miniblog.Core.Services.Azure
             key = $"{typeof(T).Name}_{key}";
             _logger.LogTrace($"Cache Remove: {key}");
             return _cache.RemoveAsync(key, cancellationToken);
+        }
+
+        /// <summary>
+        /// Set a cache value
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key">The key<see cref="string"/></param>
+        /// <param name="value">The value<see cref="T"/></param>
+        public void Set<T>(string key, T value)
+        {
+            key = $"{typeof(T).Name}_{key}";
+            string obj = JsonConvert.SerializeObject(value, SerializationSettings);
+            try
+            {
+                _cache.Set(key, Encoding.UTF8.GetBytes(obj));
+                _logger.LogTrace($"Cache Set: {key}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Cache Set: {key}", ex);
+            }
+        }
+
+        /// <summary>
+        /// SetAsync
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key">The key<see cref="string"/></param>
+        /// <param name="value">The value<see cref="T"/></param>
+        /// <param name="cancellationToken">The cancellationToken<see cref="CancellationToken"/></param>
+        /// <returns>The <see cref="Task"/></returns>
+        public async Task SetAsync<T>(string key, T value, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                key = $"{typeof(T).Name}_{key}";
+                string obj = JsonConvert.SerializeObject(value, SerializationSettings);
+                await _cache.SetAsync(key, Encoding.UTF8.GetBytes(obj), cancellationToken);
+                _logger.LogTrace($"Cache Set: {key}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Cache Set: {key}", ex);
+            }
+        }
+
+        /// <summary>
+        /// The TryGetValue
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key">The key<see cref="string"/></param>
+        /// <param name="result">The result<see cref="T"/></param>
+        /// <returns>The <see cref="bool"/></returns>
+        public bool TryGetValue<T>(string key, out T result)
+        {
+            result = Get<T>(key);
+            return result != null;
         }
     }
 }

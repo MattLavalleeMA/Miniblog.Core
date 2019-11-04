@@ -14,8 +14,56 @@ namespace Miniblog.Core.Services
             ContextAccessor = contextAccessor;
         }
 
-        protected List<Post> Cache { get; set; }
+        protected List<Post> Cache { get; } = new List<Post>();
         protected IHttpContextAccessor ContextAccessor { get; }
+
+        protected bool IsAdmin() => ContextAccessor.HttpContext?.User?.Identity.IsAuthenticated == true;
+
+        protected void SortCache()
+        {
+            Cache.Sort((p1, p2) => p2.PubDate.CompareTo(p1.PubDate));
+        }
+
+        public abstract Task DeletePost(Post post);
+
+        public virtual Task<IEnumerable<string>> GetCategories()
+        {
+            bool isAdmin = IsAdmin();
+
+            IEnumerable<string> categories = Cache
+                .Where(p => p.IsPublished || isAdmin)
+                .SelectMany(post => post.Categories)
+                .Select(cat => cat.ToLowerInvariant())
+                .Distinct();
+
+            return Task.FromResult(categories);
+        }
+
+        public virtual Task<Post> GetPostById(string id)
+        {
+            Post post = Cache.FirstOrDefault(p => p.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+            bool isAdmin = IsAdmin();
+
+            if (post != null && post.PubDate <= DateTime.UtcNow && (post.IsPublished || isAdmin))
+            {
+                return Task.FromResult(post);
+            }
+
+            return Task.FromResult<Post>(null);
+        }
+
+        public virtual Task<Post> GetPostBySlug(string slug)
+        {
+            Post post = Cache.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+            bool isAdmin = IsAdmin();
+
+            if (post != null && post.PubDate <= DateTime.UtcNow && (post.IsPublished || isAdmin))
+            {
+                return Task.FromResult(post);
+            }
+
+            return Task.FromResult<Post>(null);
+        }
 
         public virtual Task<IEnumerable<Post>> GetPosts(int count, int skip = 0)
         {
@@ -44,56 +92,8 @@ namespace Miniblog.Core.Services
         /// <inheritdoc />
         public async Task<PagedResultModel<Post>> GetPostsPaged(int pageSize, int pageNumber = 1, string category = "", bool isAdmin = false) => throw new NotImplementedException();
 
-        public virtual Task<Post> GetPostBySlug(string slug)
-        {
-            Post post = Cache.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
-            bool isAdmin = IsAdmin();
-
-            if (post != null && post.PubDate <= DateTime.UtcNow && (post.IsPublished || isAdmin))
-            {
-                return Task.FromResult(post);
-            }
-
-            return Task.FromResult<Post>(null);
-        }
-
-        public virtual Task<Post> GetPostById(string id)
-        {
-            Post post = Cache.FirstOrDefault(p => p.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
-            bool isAdmin = IsAdmin();
-
-            if (post != null && post.PubDate <= DateTime.UtcNow && (post.IsPublished || isAdmin))
-            {
-                return Task.FromResult(post);
-            }
-
-            return Task.FromResult<Post>(null);
-        }
-
-        public virtual Task<IEnumerable<string>> GetCategories()
-        {
-            bool isAdmin = IsAdmin();
-
-            IEnumerable<string> categories = Cache
-                .Where(p => p.IsPublished || isAdmin)
-                .SelectMany(post => post.Categories)
-                .Select(cat => cat.ToLowerInvariant())
-                .Distinct();
-
-            return Task.FromResult(categories);
-        }
-
-        public abstract Task SavePost(Post post);
-
-        public abstract Task DeletePost(Post post);
-
         public abstract Task<string> SaveFile(byte[] bytes, string fileName, string suffix = null);
 
-        protected void SortCache()
-        {
-            Cache.Sort((p1, p2) => p2.PubDate.CompareTo(p1.PubDate));
-        }
-
-        protected bool IsAdmin() => ContextAccessor.HttpContext?.User?.Identity.IsAuthenticated == true;
+        public abstract Task SavePost(Post post);
     }
 }

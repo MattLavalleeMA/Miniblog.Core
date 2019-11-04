@@ -6,28 +6,12 @@ using System.Collections.Generic;
 
 namespace Miniblog.Core.Configuration
 {
-    /// <summary>
-    /// Defines the <see cref="UserSettings" />
-    /// </summary>
-    public class UserSettings
-    {
-        /// <summary>
-        /// Gets or sets the Salt
-        /// </summary>
-        public string Salt { get; set; }
-
-        /// <summary>
-        /// Gets or sets the List of Users
-        /// </summary>
-        public List<User> Users { get; set; }
-    }
-
     public class User
     {
         /// <summary>
-        /// Gets or sets the UserId
+        /// Gets or sets the Email
         /// </summary>
-        public string UserId { get; set; }
+        public string Email { get; set; }
 
         /// <summary>
         /// Gets or sets the FirstName
@@ -45,9 +29,9 @@ namespace Miniblog.Core.Configuration
         public string Nickname { get; set; }
 
         /// <summary>
-        /// Gets or sets the Email
+        /// Gets or sets the Password
         /// </summary>
-        public string Email { get; set; }
+        public string Password { get; set; }
 
         /// <summary>
         /// Gets or sets the Url
@@ -55,8 +39,24 @@ namespace Miniblog.Core.Configuration
         public string Url { get; set; }
 
         /// <summary>
-        /// Gets or sets the Password
+        /// Gets or sets the UserId
         /// </summary>
-        public string Password { get; set; }
+        public string UserId { get; set; }
+    }
+
+    /// <summary>
+    /// Defines the <see cref="UserSettings" />
+    /// </summary>
+    public class UserSettings
+    {
+        /// <summary>
+        /// Gets or sets the Salt
+        /// </summary>
+        public string Salt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the List of Users
+        /// </summary>
+        public List<User> Users { get; set; }
     }
 }

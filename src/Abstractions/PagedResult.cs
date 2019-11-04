@@ -30,6 +30,16 @@ namespace Miniblog.Core.Abstractions
         }
 
         /// <summary>
+        ///     Gets a value indicating whether HasNextPage
+        /// </summary>
+        public bool HasNextPage => PageNumber < TotalPages;
+
+        /// <summary>
+        ///     Gets a value indicating whether HasPreviousPage
+        /// </summary>
+        public bool HasPreviousPage => PageNumber > 1;
+
+        /// <summary>
         ///     Gets the Items
         /// </summary>
         public List<T> Items => _source
@@ -38,9 +48,9 @@ namespace Miniblog.Core.Abstractions
             .ToList();
 
         /// <summary>
-        ///     Gets the TotalItems
+        ///     Gets the NextPageNumber
         /// </summary>
-        public int TotalItems => _source.Count();
+        public int NextPageNumber => HasNextPage ? PageNumber + 1 : 0;
 
         /// <summary>
         ///     Gets the PageNumber
@@ -53,28 +63,18 @@ namespace Miniblog.Core.Abstractions
         public int PageSize { get; }
 
         /// <summary>
-        ///     Gets the TotalPages
-        /// </summary>
-        public int TotalPages => (int) Math.Ceiling(TotalItems / (double) PageSize);
-
-        /// <summary>
-        ///     Gets a value indicating whether HasPreviousPage
-        /// </summary>
-        public bool HasPreviousPage => PageNumber > 1;
-
-        /// <summary>
-        ///     Gets a value indicating whether HasNextPage
-        /// </summary>
-        public bool HasNextPage => PageNumber < TotalPages;
-
-        /// <summary>
-        ///     Gets the NextPageNumber
-        /// </summary>
-        public int NextPageNumber => HasNextPage ? PageNumber + 1 : 0;
-
-        /// <summary>
         ///     Gets the PreviousPageNumber
         /// </summary>
         public int PreviousPageNumber => HasPreviousPage ? PageNumber - 1 : 0;
+
+        /// <summary>
+        ///     Gets the TotalItems
+        /// </summary>
+        public int TotalItems => _source.Count();
+
+        /// <summary>
+        ///     Gets the TotalPages
+        /// </summary>
+        public int TotalPages => (int)Math.Ceiling(TotalItems / (double)PageSize);
     }
 }

@@ -14,23 +14,11 @@ namespace Miniblog.Core.Serialization
     public class Iso8601TimeSpanConverter : JsonConverter
     {
         /// <summary>
-        ///     Writes the specified object to JSON.
+        ///     Determines whether this instance can convert the specified object type.
         /// </summary>
-        /// <param name="writer">The JSON writer.</param>
-        /// <param name="value">The value to serialize.</param>
-        /// <param name="serializer">The JSON serializer.</param>
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            if (serializer == null)
-            {
-                throw new ArgumentNullException("serializer");
-            }
-
-            //TODO: Will only be called with values of TimeSpan or TimeSpan? (Do we have to handle Nullable<TimeSpan>?)
-            var timeSpan = (TimeSpan) value;
-            string iso8601TimeSpanString = XmlConvert.ToString(timeSpan); //XmlConvert for TimeSpan uses ISO8601, so delegate serialization to it
-            serializer.Serialize(writer, iso8601TimeSpanString);
-        }
+        /// <param name="objectType">Type of the object.</param>
+        /// <returns>true if this instance can convert the specified object type; otherwise, false.</returns>
+        public override bool CanConvert(Type objectType) => objectType == typeof(TimeSpan) || objectType == typeof(TimeSpan?);
 
         /// <summary>
         ///     Reads the JSON token.
@@ -63,10 +51,22 @@ namespace Miniblog.Core.Serialization
         }
 
         /// <summary>
-        ///     Determines whether this instance can convert the specified object type.
+        ///     Writes the specified object to JSON.
         /// </summary>
-        /// <param name="objectType">Type of the object.</param>
-        /// <returns>true if this instance can convert the specified object type; otherwise, false.</returns>
-        public override bool CanConvert(Type objectType) => objectType == typeof(TimeSpan) || objectType == typeof(TimeSpan?);
+        /// <param name="writer">The JSON writer.</param>
+        /// <param name="value">The value to serialize.</param>
+        /// <param name="serializer">The JSON serializer.</param>
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if (serializer == null)
+            {
+                throw new ArgumentNullException("serializer");
+            }
+
+            //TODO: Will only be called with values of TimeSpan or TimeSpan? (Do we have to handle Nullable<TimeSpan>?)
+            var timeSpan = (TimeSpan)value;
+            string iso8601TimeSpanString = XmlConvert.ToString(timeSpan); //XmlConvert for TimeSpan uses ISO8601, so delegate serialization to it
+            serializer.Serialize(writer, iso8601TimeSpanString);
+        }
     }
 }

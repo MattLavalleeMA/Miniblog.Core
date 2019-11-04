@@ -33,6 +33,29 @@ namespace Miniblog.Core.Controllers
             _manifest = manifest;
         }
 
+        private async Task<ISyndicationFeedWriter> GetWriter(string type, XmlWriter xmlWriter, DateTime updated)
+        {
+            string host = Request.Scheme + "://" + Request.Host + "/";
+
+            if (type.Equals("rss", StringComparison.OrdinalIgnoreCase))
+            {
+                var rss = new RssFeedWriter(xmlWriter);
+                await rss.WriteTitle(_manifest.Name);
+                await rss.WriteDescription(_manifest.Description);
+                await rss.WriteGenerator("Miniblog.Core");
+                await rss.WriteValue("link", host);
+                return rss;
+            }
+
+            var atom = new AtomFeedWriter(xmlWriter);
+            await atom.WriteTitle(_manifest.Name);
+            await atom.WriteId(host);
+            await atom.WriteSubtitle(_manifest.Description);
+            await atom.WriteGenerator("Miniblog.Core", "https://github.com/madskristensen/Miniblog.Core", "1.0");
+            await atom.WriteValue("updated", updated.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+            return atom;
+        }
+
         [Route("/robots.txt")]
         [OutputCache(Profile = "default")]
         public string RobotsTxt()
@@ -46,36 +69,6 @@ namespace Miniblog.Core.Controllers
             return sb.ToString();
         }
 
-        [Route("/sitemap.xml")]
-        public async Task SitemapXml()
-        {
-            string host = Request.Scheme + "://" + Request.Host;
-
-            Response.ContentType = "application/xml";
-
-            using (XmlWriter xml = XmlWriter.Create(Response.Body, new XmlWriterSettings {Indent = true}))
-            {
-                xml.WriteStartDocument();
-                xml.WriteStartElement("urlset", "http://www.sitemaps.org/schemas/sitemap/0.9");
-
-                IEnumerable<Post> posts = await _blog.GetPosts(int.MaxValue);
-
-                foreach (Post post in posts)
-                {
-                    DateTime[] lastMod = {post.PubDate, post.DateModified};
-
-                    xml.WriteStartElement("url");
-                    xml.WriteElementString("loc", host + post.GetLink());
-                    xml.WriteElementString("lastmod",
-                        lastMod.Max()
-                            .ToString("yyyy-MM-ddThh:mmzzz"));
-                    xml.WriteEndElement();
-                }
-
-                xml.WriteEndElement();
-            }
-        }
-
         [Route("/rsd.xml")]
         public void RsdXml()
         {
@@ -84,7 +77,7 @@ namespace Miniblog.Core.Controllers
             Response.ContentType = "application/xml";
             Response.Headers["cache-control"] = "no-cache, no-store, must-revalidate";
 
-            using (XmlWriter xml = XmlWriter.Create(Response.Body, new XmlWriterSettings {Indent = true}))
+            using (XmlWriter xml = XmlWriter.Create(Response.Body, new XmlWriterSettings { Indent = true }))
             {
                 xml.WriteStartDocument();
                 xml.WriteStartElement("rsd");
@@ -153,27 +146,34 @@ namespace Miniblog.Core.Controllers
             }
         }
 
-        private async Task<ISyndicationFeedWriter> GetWriter(string type, XmlWriter xmlWriter, DateTime updated)
+        [Route("/sitemap.xml")]
+        public async Task SitemapXml()
         {
-            string host = Request.Scheme + "://" + Request.Host + "/";
+            string host = Request.Scheme + "://" + Request.Host;
 
-            if (type.Equals("rss", StringComparison.OrdinalIgnoreCase))
+            Response.ContentType = "application/xml";
+
+            using (XmlWriter xml = XmlWriter.Create(Response.Body, new XmlWriterSettings { Indent = true }))
             {
-                var rss = new RssFeedWriter(xmlWriter);
-                await rss.WriteTitle(_manifest.Name);
-                await rss.WriteDescription(_manifest.Description);
-                await rss.WriteGenerator("Miniblog.Core");
-                await rss.WriteValue("link", host);
-                return rss;
-            }
+                xml.WriteStartDocument();
+                xml.WriteStartElement("urlset", "http://www.sitemaps.org/schemas/sitemap/0.9");
 
-            var atom = new AtomFeedWriter(xmlWriter);
-            await atom.WriteTitle(_manifest.Name);
-            await atom.WriteId(host);
-            await atom.WriteSubtitle(_manifest.Description);
-            await atom.WriteGenerator("Miniblog.Core", "https://github.com/madskristensen/Miniblog.Core", "1.0");
-            await atom.WriteValue("updated", updated.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-            return atom;
+                IEnumerable<Post> posts = await _blog.GetPosts(int.MaxValue);
+
+                foreach (Post post in posts)
+                {
+                    DateTime[] lastMod = { post.PubDate, post.DateModified };
+
+                    xml.WriteStartElement("url");
+                    xml.WriteElementString("loc", host + post.GetLink());
+                    xml.WriteElementString("lastmod",
+                        lastMod.Max()
+                            .ToString("yyyy-MM-ddThh:mmzzz"));
+                    xml.WriteEndElement();
+                }
+
+                xml.WriteEndElement();
+            }
         }
     }
 }

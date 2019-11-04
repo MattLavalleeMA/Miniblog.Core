@@ -4,6 +4,9 @@ namespace Miniblog.Core.Configuration
 {
     public class BlogSettings
     {
+        [JsonProperty("commentsCloseAfterDays")]
+        public int CommentsCloseAfterDays { get; set; } = 7;
+
         [JsonProperty("name")]
         public string Name { get; set; } = "My Miniblog.Core Blog";
 
@@ -12,8 +15,5 @@ namespace Miniblog.Core.Configuration
 
         [JsonProperty("postsPerPage")]
         public int PostsPerPage { get; set; } = 2;
-
-        [JsonProperty("commentsCloseAfterDays")]
-        public int CommentsCloseAfterDays { get; set; } = 7;
     }
 }

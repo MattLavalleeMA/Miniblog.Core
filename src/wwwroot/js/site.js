@@ -1,5 +1,4 @@
 ﻿(function (window, document) {
-
     // Lazy load stylesheets
     requestAnimationFrame(function () {
         var stylesheets = document.querySelectorAll("link[as=style]");
@@ -59,7 +58,6 @@
 
     // Lazy load images/iframes
     window.addEventListener("load", function () {
-
         var timer,
             images,
             viewHeight;
@@ -106,7 +104,6 @@
 
                     timer = null;
                 });
-
             }, delay);
         }
 
@@ -135,11 +132,9 @@
                 };
         })();
 
-
         window.addEventListener("scroll", scroll);
         window.addEventListener("resize", init);
 
         init();
     });
-
 })(window, document);

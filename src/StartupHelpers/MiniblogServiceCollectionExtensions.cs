@@ -2,20 +2,27 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Miniblog.Core.Configuration;
-using Miniblog.Core.Services;
 using Miniblog.Core.Services.Azure;
 
 namespace Miniblog.Core.StartupHelpers
 {
     public static class MiniblogServiceCollectionExtensions
     {
+        // ReSharper disable once UnusedMethodReturnValue.Global
         public static IServiceCollection AddMiniblogRedisCache(this IServiceCollection services, IConfiguration configuration)
         {
             Ensure.Argument.IsNotNull(services);
             Ensure.Argument.IsNotNull(configuration);
 
-            if (configuration.GetChildren()
-                .All(t => t.Key != nameof(RedisCacheSettings)))
+            if (configuration == null)
+            {
+                return services;
+            }
+
+            if (
+                configuration.GetChildren()
+                    .All(t => t.Key != nameof(RedisCacheSettings))
+            )
             {
                 return services;
             }

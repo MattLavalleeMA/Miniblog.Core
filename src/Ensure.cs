@@ -18,34 +18,32 @@ namespace Miniblog.Core
     public static class Ensure
     {
         /// <summary>
-        /// Ensures that the given expression is true
+        /// Ensures given collection contains a value that satisfied a predicate
         /// </summary>
-        /// <exception cref="System.Exception">Exception thrown if false condition</exception>
-        /// <param name="condition">Condition to test/ensure</param>
-        /// <param name="message">Message for the exception</param>
-        /// <exception cref="System.Exception">Thrown when <paramref name="condition"/> is false</exception>
-        public static void That(bool condition, string message = "")
+        /// <typeparam name="T">Collection type</typeparam>
+        /// <param name="collection">Collection to test</param>
+        /// <param name="predicate">Predicate where one value in the collection must satisfy</param>
+        /// <param name="message">Message of the exception if value not found</param>
+        /// <exception cref="System.Exception">
+        ///     Thrown if collection is null, empty or doesn't contain a value that satisfies <paramref cref="predicate"/>
+        /// </exception>
+        public static void Contains<T>(IEnumerable<T> collection, Func<T, bool> predicate, string message = "")
         {
-            That<Exception>(condition, message);
+            That(collection != null && collection.Any(predicate), message);
         }
 
         /// <summary>
-        /// Ensures that the given expression is true
+        /// Ensures given objects are equal
         /// </summary>
-        /// <typeparam name="TException">Type of exception to throw</typeparam>
-        /// <param name="condition">Condition to test/ensure</param>
-        /// <param name="message">Message for the exception</param>
-        /// <exception>Thrown when
-        ///     <cref>TException</cref>
-        ///     <paramref name="condition"/> is false</exception>
-        /// <remarks><see cref="TException"/> must have a constructor that takes a single string</remarks>
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Global
-        public static void That<TException>(bool condition, string message = "") where TException : Exception
+        /// <typeparam name="T">Type of objects to compare for equality</typeparam>
+        /// <param name="left">First Value to Compare</param>
+        /// <param name="right">Second Value to Compare</param>
+        /// <param name="message">Message of the exception when values equal</param>
+        /// <exception cref="System.Exception">Exception is thrown when <paramref cref="left"/> not equal to <paramref cref="right"/></exception>
+        /// <remarks>Null values will cause an exception to be thrown</remarks>
+        public static void Equals<T>(T left, T right, string message = "Values must be equal")
         {
-            if (!condition)
-            {
-                throw (TException) Activator.CreateInstance(typeof(TException), message);
-            }
+            That(left != null && right != null && left.Equals(right), message);
         }
 
         /// <summary>
@@ -97,17 +95,18 @@ namespace Miniblog.Core
         }
 
         /// <summary>
-        /// Ensures given objects are equal
+        /// Ensures ALL items in the given collection satisfy a predicate
         /// </summary>
-        /// <typeparam name="T">Type of objects to compare for equality</typeparam>
-        /// <param name="left">First Value to Compare</param>
-        /// <param name="right">Second Value to Compare</param>
-        /// <param name="message">Message of the exception when values equal</param>
-        /// <exception cref="System.Exception">Exception is thrown when <paramref cref="left"/> not equal to <paramref cref="right"/></exception>
-        /// <remarks>Null values will cause an exception to be thrown</remarks>
-        public static void Equals<T>(T left, T right, string message = "Values must be equal")
+        /// <typeparam name="T">Collection type</typeparam>
+        /// <param name="collection">Collection to test</param>
+        /// <param name="predicate">Predicate that ALL values in the collection must satisfy</param>
+        /// <param name="message">Message of the exception if not all values are valid</param>
+        /// <exception cref="System.Exception">
+        ///     Thrown if collection is null, empty or not all values satisfies <paramref cref="predicate"/>
+        /// </exception>
+        public static void Items<T>(IEnumerable<T> collection, Func<T, bool> predicate, string message = "")
         {
-            That(left != null && right != null && left.Equals(right), message);
+            That(collection != null && collection.All(predicate), message);
         }
 
         /// <summary>
@@ -125,33 +124,34 @@ namespace Miniblog.Core
         }
 
         /// <summary>
-        /// Ensures given collection contains a value that satisfied a predicate
+        /// Ensures that the given expression is true
         /// </summary>
-        /// <typeparam name="T">Collection type</typeparam>
-        /// <param name="collection">Collection to test</param>
-        /// <param name="predicate">Predicate where one value in the collection must satisfy</param>
-        /// <param name="message">Message of the exception if value not found</param>
-        /// <exception cref="System.Exception">
-        ///     Thrown if collection is null, empty or doesn't contain a value that satisfies <paramref cref="predicate"/>
-        /// </exception>
-        public static void Contains<T>(IEnumerable<T> collection, Func<T, bool> predicate, string message = "")
+        /// <exception cref="System.Exception">Exception thrown if false condition</exception>
+        /// <param name="condition">Condition to test/ensure</param>
+        /// <param name="message">Message for the exception</param>
+        /// <exception cref="System.Exception">Thrown when <paramref name="condition"/> is false</exception>
+        public static void That(bool condition, string message = "")
         {
-            That(collection != null && collection.Any(predicate), message);
+            That<Exception>(condition, message);
         }
 
         /// <summary>
-        /// Ensures ALL items in the given collection satisfy a predicate
+        /// Ensures that the given expression is true
         /// </summary>
-        /// <typeparam name="T">Collection type</typeparam>
-        /// <param name="collection">Collection to test</param>
-        /// <param name="predicate">Predicate that ALL values in the collection must satisfy</param>
-        /// <param name="message">Message of the exception if not all values are valid</param>
-        /// <exception cref="System.Exception">
-        ///     Thrown if collection is null, empty or not all values satisfies <paramref cref="predicate"/>
-        /// </exception>
-        public static void Items<T>(IEnumerable<T> collection, Func<T, bool> predicate, string message = "")
+        /// <typeparam name="TException">Type of exception to throw</typeparam>
+        /// <param name="condition">Condition to test/ensure</param>
+        /// <param name="message">Message for the exception</param>
+        /// <exception>Thrown when
+        ///     <cref>TException</cref>
+        ///     <paramref name="condition"/> is false</exception>
+        /// <remarks><see cref="TException"/> must have a constructor that takes a single string</remarks>
+        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Global
+        public static void That<TException>(bool condition, string message = "") where TException : Exception
         {
-            That(collection != null && collection.All(predicate), message);
+            if (!condition)
+            {
+                throw (TException)Activator.CreateInstance(typeof(TException), message);
+            }
         }
 
         /// <summary>
